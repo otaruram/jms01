@@ -1,16 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database';
 
-// jose is ESM-only, so we use dynamic import
-let joseModule: any = null;
-
-async function loadJose() {
-  if (!joseModule) {
-    joseModule = await import('jose');
-  }
-  return joseModule;
-}
-
 export interface AuthenticatedRequest extends Request {
   user?: {
     sub: string;
@@ -22,7 +12,7 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * JWT Authentication Middleware.
- * Verifies the Bearer token from `Authorization` header against SUPABASE_JWT_SECRET.
+ * Verifies the Bearer token by calling Supabase API directly to ensure 100% compatibility.
  */
 export async function authMiddleware(
   req: AuthenticatedRequest,
@@ -41,24 +31,33 @@ export async function authMiddleware(
     }
 
     const token = authHeader.split(' ')[1];
-    const jose = await loadJose();
     
-    const jwtSecret = process.env.SUPABASE_JWT_SECRET || process.env.SUPABASE_SECRET_KEY;
-    if (!jwtSecret) {
-      throw new Error('SUPABASE_JWT_SECRET is not configured');
+    const apikey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!process.env.SUPABASE_URL || !apikey) {
+      console.error("Missing Supabase env vars in backend!");
+      res.status(500).json({ success: false, message: 'Server configuration error' });
+      return;
     }
-    
-    const secret = new TextEncoder().encode(jwtSecret);
 
-    const { payload } = await jose.jwtVerify(token, secret, {
-      algorithms: ['HS256'],
+    // Call Supabase API to verify the token
+    const verifyResponse = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: apikey
+      }
     });
+
+    if (!verifyResponse.ok) {
+      throw new Error('Invalid token from Supabase');
+    }
+
+    const payload = await verifyResponse.json();
 
     // Sync user to local database and fetch role
     const userEmail = payload.email as string;
     
     let dbUser = await prisma.user.findUnique({
-      where: { id: payload.sub },
+      where: { id: payload.id },
     });
 
     if (!dbUser) {
@@ -66,7 +65,7 @@ export async function authMiddleware(
       const isSuperAdmin = userEmail === process.env.SUPER_ADMIN_EMAIL;
       dbUser = await prisma.user.create({
         data: {
-          id: payload.sub as string,
+          id: payload.id as string,
           email: userEmail,
           name: (payload.user_metadata as any)?.full_name || userEmail.split('@')[0],
           role: isSuperAdmin ? 'SUPER_ADMIN' : 'USER',
@@ -82,14 +81,6 @@ export async function authMiddleware(
 
     next();
   } catch (error: any) {
-    if (error?.code === 'ERR_JWT_EXPIRED') {
-      res.status(401).json({
-        success: false,
-        message: 'Token telah kedaluwarsa. Silakan login ulang.'
-      });
-      return;
-    }
-
     res.status(401).json({
       success: false,
       message: 'Token tidak valid.'
