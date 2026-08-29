@@ -32,10 +32,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     const fetchUserRole = async (session: any) => {
       if (!session) {
-        setUser(null);
-        setLoading(false);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
         return;
       }
 
@@ -43,23 +47,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await api.get('/auth/me');
 
         if (response.data.success) {
-          setUser(response.data.data);
+          if (mounted) setUser(response.data.data);
         } else {
-          setUser(null);
+          if (mounted) setUser(null);
         }
       } catch (error) {
         console.error('Failed to fetch user role', error);
-        setUser(null);
+        if (mounted) setUser(null);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      fetchUserRole(session);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await fetchUserRole(session);
+        } else {
+          if (mounted) {
+            setUser(null);
+            setLoading(false);
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (mounted) setLoading(true);
+        fetchUserRole(session);
+      } else if (event === 'SIGNED_OUT') {
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const value = {
