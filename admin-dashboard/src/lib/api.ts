@@ -16,6 +16,20 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Clear local session if token is rejected by backend
+      await supabase.auth.signOut();
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const inventoryApi = {
   getInventory: () => api.get('/inventory'),
   installProduct: (productId: string, projectId: string, qty: number) => 
