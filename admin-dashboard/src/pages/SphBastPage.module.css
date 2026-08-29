@@ -24,9 +24,19 @@
   margin: 0;
 }
 
+.headerActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  white-space: nowrap;
+}
+
 .actionGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
@@ -55,6 +65,7 @@
   border-radius: 8px;
   color: var(--text-secondary);
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .activeCard .actionIconWrapper {
@@ -77,7 +88,7 @@
 
 .formGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-top: 1rem;
 }
@@ -103,6 +114,7 @@
   border-radius: 6px;
   resize: vertical;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 .textarea:focus {
@@ -117,5 +129,41 @@
   margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border-color);
+  flex-wrap: wrap;
 }
+
 .tableWrapper { overflow-x: auto; }
+
+/* ========= MOBILE RESPONSIVE ========= */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .headerActions > * {
+    flex: 1;
+  }
+
+  .actionGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .formActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .formActions > button {
+    width: 100%;
+    justify-content: center;
+  }
+}

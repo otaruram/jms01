@@ -68,8 +68,12 @@ export const orderApi = {
 };
 
 export const sphBastApi = {
-  getDocuments: () => api.get('/sph-bast'),
-  createDocument: (data: any) => api.post('/sph-bast', data),
+  getSph: () => api.get('/sph'),
+  getBast: () => api.get('/bast'),
+  createSph: (data: { clientId: string; projectId: string; subject: string; totalAmount: number; items: string }) =>
+    api.post('/sph', data),
+  createBast: (data: { clientId: string; projectId: string; description: string }) =>
+    api.post('/bast', data),
 };
 
 export const reportsApi = {

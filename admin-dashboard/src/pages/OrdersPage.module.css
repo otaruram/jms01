@@ -106,3 +106,19 @@
 .textRight {
   text-align: right;
 }
+
+/* ========= MOBILE RESPONSIVE ========= */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tableControls {
+    flex-direction: column;
+  }
+
+  .searchWrapper {
+    max-width: 100%;
+  }
+}
