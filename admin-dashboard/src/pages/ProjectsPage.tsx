@@ -6,7 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import { Pagination } from '../components/ui/Pagination';
 import { projectApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { SlideOver } from '../components/ui/SlideOver';
+import { Input } from '../components/ui/Input';
 import styles from './ProjectsPage.module.css';
 
 interface Project {
@@ -21,7 +23,29 @@ export function ProjectsPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+  const [newProject, setNewProject] = useState({ name: '', clientId: '', totalCapital: '' });
   const { isReadOnly } = useAuth();
+  const queryClient = useQueryClient();
+
+  const createProjectMutation = useMutation({
+    mutationFn: (data: any) => projectApi.createProject(data.name, data.clientId, parseFloat(data.totalCapital)),
+    onSuccess: () => {
+      alert('Proyek berhasil dibuat!');
+      setIsSlideOverOpen(false);
+      setNewProject({ name: '', clientId: '', totalCapital: '' });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (error: any) => {
+      alert('Gagal membuat proyek: ' + (error.response?.data?.message || error.message));
+    }
+  });
+
+  const handleCreateProject = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProject.name || !newProject.clientId) return;
+    createProjectMutation.mutate(newProject);
+  };
 
   const { data: response, isLoading, isError } = useQuery({
     queryKey: ['projects'],
@@ -50,7 +74,9 @@ export function ProjectsPage() {
           <h1 className={styles.title}>Keuangan Proyek</h1>
           <p className={styles.subtitle}>Pantau detail pengeluaran per proyek</p>
         </div>
-        {!isReadOnly && <Button>+ Proyek Baru</Button>}
+        {!isReadOnly && (
+          <Button onClick={() => setIsSlideOverOpen(true)}>+ Proyek Baru</Button>
+        )}
       </header>
 
       <Card>
@@ -128,6 +154,51 @@ export function ProjectsPage() {
           />
         </div>
       </Card>
+
+      <SlideOver 
+        isOpen={isSlideOverOpen} 
+        onClose={() => setIsSlideOverOpen(false)} 
+        title="Buat Proyek Baru"
+      >
+        <form onSubmit={handleCreateProject} className="flex flex-col gap-4">
+          <Input 
+            label="ID Klien" 
+            placeholder="Masukkan ID Klien"
+            value={newProject.clientId}
+            onChange={(e) => setNewProject({...newProject, clientId: e.target.value})}
+            required
+          />
+          <Input 
+            label="Nama Proyek" 
+            placeholder="Masukkan Nama Proyek"
+            value={newProject.name}
+            onChange={(e) => setNewProject({...newProject, name: e.target.value})}
+            required
+          />
+          <Input 
+            label="Total Modal (Rp)" 
+            type="number"
+            placeholder="Masukkan Angka Modal"
+            value={newProject.totalCapital}
+            onChange={(e) => setNewProject({...newProject, totalCapital: e.target.value})}
+          />
+          
+          <div className="flex justify-end gap-2 mt-8">
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => setNewProject({ name: 'Instalasi Jaringan', clientId: 'CLI-DEMO-01', totalCapital: '15000000' })}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              Auto Fill (Dev)
+            </Button>
+            <Button variant="outline" type="button" onClick={() => setIsSlideOverOpen(false)}>Batal</Button>
+            <Button type="submit" disabled={createProjectMutation.isPending}>
+              {createProjectMutation.isPending ? 'Menyimpan...' : 'Simpan Proyek'}
+            </Button>
+          </div>
+        </form>
+      </SlideOver>
     </div>
   );
 }

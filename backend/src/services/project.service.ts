@@ -14,4 +14,8 @@ export class ProjectService {
   async addCapital(projectId: string, type: string, amount: number, description: string) {
     return await projectRepository.addCapital(projectId, type, amount, description);
   }
+
+  async createProject(name: string, clientId: string, totalCapital: number) {
+    return await projectRepository.create(name, clientId, totalCapital);
+  }
 }

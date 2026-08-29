@@ -38,4 +38,14 @@ export class ProjectController {
       res.status(500).json({ success: false, message: error.message });
     }
   };
+
+  createProject = async (req: Request, res: Response) => {
+    try {
+      const { name, clientId, totalCapital } = req.body;
+      const project = await projectService.createProject(name, clientId, totalCapital || 0);
+      res.status(201).json({ success: true, data: project, message: 'Proyek berhasil dibuat' });
+    } catch (error: any) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  };
 }

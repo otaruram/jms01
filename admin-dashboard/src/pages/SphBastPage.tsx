@@ -129,6 +129,19 @@ export function SphBastPage() {
           </div>
 
           <div className={`${styles.formActions} mt-8`}>
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => setFormData({
+                clientName: 'PT. Maju Mundur (CLI-DEMO-01)',
+                picName: 'Budi Santoso',
+                date: new Date().toISOString().split('T')[0],
+                details: '1. Instalasi Jaringan LAN (15 Titik)\n2. Setup Mikrotik Router\n3. Testing dan Commissioning'
+              })}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              Auto Fill (Dev)
+            </Button>
             <Button variant="outline" type="button">Simpan Draft</Button>
             <Button type="submit" disabled={generateDocMutation.isPending}>
               <Printer size={16} style={{marginRight: 8}}/> 

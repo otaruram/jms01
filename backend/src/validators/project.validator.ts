@@ -10,3 +10,11 @@ export const addCapitalSchema = z.object({
 });
 
 export type AddCapitalInput = z.infer<typeof addCapitalSchema>;
+
+export const createProjectSchema = z.object({
+  name: z.string().min(1, { message: 'Nama proyek wajib diisi' }),
+  clientId: z.string().min(1, { message: 'ID Klien wajib diisi' }),
+  totalCapital: z.number().min(0).default(0),
+});
+
+export type CreateProjectInput = z.infer<typeof createProjectSchema>;

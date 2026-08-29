@@ -76,4 +76,15 @@ export class ProjectRepository {
       return capital;
     });
   }
+
+  async create(name: string, clientId: string, totalCapital: number) {
+    return await prisma.project.create({
+      data: {
+        name,
+        clientId,
+        totalCapital,
+        status: 'Aktif',
+      },
+    });
+  }
 }

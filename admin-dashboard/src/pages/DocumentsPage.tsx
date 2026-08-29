@@ -147,6 +147,23 @@ export function DocumentsPage() {
                 </div>
               </div>
               <div className={styles.formActions}>
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={() => {
+                    setDocData({
+                      clientId: 'CLI-DEMO-01',
+                      projectId: 'PRJ-DEMO-01',
+                      amount: '15000000',
+                      date: new Date().toISOString().split('T')[0],
+                      items: 'Instalasi Server, Setup Jaringan'
+                    });
+                  }}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  style={{ marginRight: '1rem' }}
+                >
+                  Auto Fill (Dev)
+                </Button>
                 <Button onClick={handleGenerate} disabled={createDocMutation.isPending}>
                   {createDocMutation.isPending ? 'Menyimpan...' : 'Generate Dokumen'}
                 </Button>
@@ -324,6 +341,23 @@ export function DocumentsPage() {
 
           <div className={`${styles.formActions} mt-8`}>
             <Button variant="outline" type="button" onClick={() => setIsSlideOverOpen(false)}>Batal</Button>
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => {
+                setDocData({
+                  clientId: 'CLI-DEMO-01',
+                  projectId: 'PRJ-DEMO-01',
+                  amount: '15000000',
+                  date: new Date().toISOString().split('T')[0],
+                  items: ''
+                });
+                setDocItems([{name: 'Instalasi Server', qty: 1, price: 15000000}]);
+              }}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              Auto Fill (Dev)
+            </Button>
             <Button type="submit" disabled={createDocMutation.isPending}>
               {createDocMutation.isPending ? 'Memproses...' : 'Buat Kwitansi & Surat Jalan'}
             </Button>

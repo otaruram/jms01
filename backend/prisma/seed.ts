@@ -28,16 +28,22 @@ async function main() {
   }
 
   // Create Client
-  const client = await prisma.client.create({
-    data: {
+  const client = await prisma.client.upsert({
+    where: { id: 'CLI-DEMO-01' },
+    update: {},
+    create: {
+      id: 'CLI-DEMO-01',
       name: 'PT. Maju Mundur',
       contact: '081234567890'
     }
   });
 
   // Create Project
-  const project = await prisma.project.create({
-    data: {
+  const project = await prisma.project.upsert({
+    where: { id: 'PRJ-DEMO-01' },
+    update: {},
+    create: {
+      id: 'PRJ-DEMO-01',
       name: 'Instalasi Jaringan Gedung A',
       clientId: client.id,
       totalCapital: 15000000,
@@ -46,8 +52,11 @@ async function main() {
   });
 
   // Create Products
-  const p1 = await prisma.product.create({
-    data: {
+  const p1 = await prisma.product.upsert({
+    where: { id: 'INV-DEMO-01' },
+    update: {},
+    create: {
+      id: 'INV-DEMO-01',
       name: 'Kabel UTP Cat 6',
       category: 'Kabel',
       stock: 15,

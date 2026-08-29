@@ -7,6 +7,8 @@ import { Search, Filter } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { orderApi } from '../lib/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { SlideOver } from '../components/ui/SlideOver';
+import { Input } from '../components/ui/Input';
 import styles from './OrdersPage.module.css';
 
 interface Order {
@@ -20,8 +22,29 @@ interface Order {
 export function OrdersPage() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+  const [newOrder, setNewOrder] = useState({ clientId: '', total: '' });
   const { isReadOnly } = useAuth();
   const queryClient = useQueryClient();
+
+  const createOrderMutation = useMutation({
+    mutationFn: (data: any) => orderApi.createOrder(data.clientId, parseFloat(data.total)),
+    onSuccess: () => {
+      alert('Pesanan berhasil dibuat!');
+      setIsSlideOverOpen(false);
+      setNewOrder({ clientId: '', total: '' });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+    onError: (error: any) => {
+      alert('Gagal membuat pesanan: ' + (error.response?.data?.message || error.message));
+    }
+  });
+
+  const handleCreateOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOrder.clientId || !newOrder.total) return;
+    createOrderMutation.mutate(newOrder);
+  };
 
   const { data: response, isLoading, isError } = useQuery({
     queryKey: ['orders'],
@@ -60,7 +83,9 @@ export function OrdersPage() {
           <h1 className={styles.title}>Tracking Status Pesanan</h1>
           <p className={styles.subtitle}>Pantau status pembayaran dan progres pesanan klien</p>
         </div>
-        {!isReadOnly && <Button>+ Buat Pesanan Baru</Button>}
+        {!isReadOnly && (
+          <Button onClick={() => setIsSlideOverOpen(true)}>+ Buat Pesanan Baru</Button>
+        )}
       </header>
 
       <Card>
@@ -151,6 +176,45 @@ export function OrdersPage() {
           />
         </div>
       </Card>
+
+      <SlideOver 
+        isOpen={isSlideOverOpen} 
+        onClose={() => setIsSlideOverOpen(false)} 
+        title="Buat Pesanan Baru"
+      >
+        <form onSubmit={handleCreateOrder} className="flex flex-col gap-4">
+          <Input 
+            label="ID Klien" 
+            placeholder="Masukkan ID Klien"
+            value={newOrder.clientId}
+            onChange={(e) => setNewOrder({...newOrder, clientId: e.target.value})}
+            required
+          />
+          <Input 
+            label="Total Tagihan (Rp)" 
+            type="number"
+            placeholder="Masukkan Angka Tagihan"
+            value={newOrder.total}
+            onChange={(e) => setNewOrder({...newOrder, total: e.target.value})}
+            required
+          />
+          
+          <div className="flex justify-end gap-2 mt-8">
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => setNewOrder({ clientId: 'CLI-DEMO-01', total: '15000000' })}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              Auto Fill (Dev)
+            </Button>
+            <Button variant="outline" type="button" onClick={() => setIsSlideOverOpen(false)}>Batal</Button>
+            <Button type="submit" disabled={createOrderMutation.isPending}>
+              {createOrderMutation.isPending ? 'Menyimpan...' : 'Simpan Pesanan'}
+            </Button>
+          </div>
+        </form>
+      </SlideOver>
     </div>
   );
 }

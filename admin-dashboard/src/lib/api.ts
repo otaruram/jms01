@@ -46,6 +46,8 @@ export const inventoryApi = {
 export const projectApi = {
   getProjects: () => api.get('/projects'),
   getProjectDetails: (id: string) => api.get(`/projects/${id}`),
+  createProject: (name: string, clientId: string, totalCapital: number) =>
+    api.post('/projects', { name, clientId, totalCapital }),
   addCapital: (projectId: string, type: string, amount: number, description: string) =>
     api.post('/projects/capital', { projectId, type, amount, description }),
 };
@@ -61,6 +63,7 @@ export const dashboardApi = {
 
 export const orderApi = {
   getOrders: () => api.get('/orders'),
+  createOrder: (clientId: string, total: number) => api.post('/orders', { clientId, total }),
   updateStatus: (id: string, status: string) => api.patch(`/orders/${id}/status`, { status }),
 };
 
