@@ -36,11 +36,26 @@ export const authMiddleware = async (
       return;
     }
 
-    // Support for multiline PEM keys in environment variables
-    const publicKey = secretOrKey.replace(/\\n/g, '\n');
+    // 1. BONGKAR HEADER TOKEN (Tanpa Verifikasi Dulu) UNTUK CEK ALGORITMA
+    const decodedHeader = jwt.decode(token, { complete: true });
+    if (!decodedHeader) {
+      res.status(401).json({ success: false, message: 'Format token hancur / tidak valid' });
+      return;
+    }
+    
+    const alg = decodedHeader.header.alg;
+    console.log("🔍 [AUTH DETECT] Algoritma Token:", alg);
 
-    // WAJIB gunakan secret/public key dari Supabase, dan algoritma ES256
-    const decoded: any = jwt.verify(token, publicKey, { algorithms: ['ES256', 'HS256', 'RS256'] });
+    // 2. VERIFIKASI BERDASARKAN ALGORITMA
+    let decoded: any;
+    if (alg === 'HS256') {
+      decoded = jwt.verify(token, secretOrKey, { algorithms: ['HS256'] });
+    } else if (alg === 'ES256' || alg === 'RS256') {
+      const pubKey = secretOrKey.replace(/\\n/g, '\n');
+      decoded = jwt.verify(token, pubKey, { algorithms: [alg] });
+    } else {
+      throw new Error(`Algoritma ${alg} tidak didukung backend.`);
+    }
     
     req.user = {
       sub: decoded.sub,
@@ -49,12 +64,12 @@ export const authMiddleware = async (
     };
     next();
   } catch (error: any) {
-    console.error("JWT VERIFY ERROR:", error.name, error.message);
+    console.error("❌ [AUTH ERROR]:", error.name, error.message);
     res.status(401).json({ 
       success: false, 
-      message: 'Token invalid di Production', 
-      detail: error.message, // Ini akan memberi tahu apakah token expired atau secret salah
-      secretExists: !!process.env.SUPABASE_JWT_SECRET // Cek apakah env terbaca
+      message: 'Token invalid atau kedaluwarsa', 
+      detail: error.message,
+      secretExists: !!process.env.SUPABASE_JWT_SECRET
     });
   }
 };
