@@ -11,8 +11,6 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-import { createRemoteJWKSet, jwtVerify } from 'jose';
-
 /**
  * JWT Authentication Middleware.
  * Verifies the Bearer token using jsonwebtoken (HS256) or jose (ES256/RS256 with JWKS).
@@ -53,6 +51,9 @@ export const authMiddleware = async (
     if (alg === 'HS256') {
       decodedPayload = jwt.verify(token, secretOrKey, { algorithms: ['HS256'] });
     } else if (alg === 'ES256' || alg === 'RS256') {
+      // Dynamic import for jose because it is an ESM module
+      const { createRemoteJWKSet, jwtVerify } = await import('jose');
+      
       // Gunakan JOSE untuk mengambil JWKS secara otomatis langsung dari Supabase
       const supabaseUrl = process.env.SUPABASE_URL;
       if (!supabaseUrl) {
