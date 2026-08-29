@@ -70,10 +70,17 @@ export const authMiddleware = async (
       throw new Error(`Algoritma ${alg} tidak didukung backend.`);
     }
     
+    // Fetch role from DB
+    const dbUser = await prisma.user.findUnique({
+      where: { id: decodedPayload.sub as string },
+      select: { role: true }
+    });
+
     req.user = {
       sub: decodedPayload.sub as string,
       email: decodedPayload.email as string,
       name: (decodedPayload.user_metadata as any)?.full_name,
+      role: dbUser?.role || (decodedPayload.email === process.env.SUPER_ADMIN_EMAIL ? 'SUPER_ADMIN' : 'USER'),
     };
     next();
   } catch (error: any) {
