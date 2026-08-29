@@ -82,8 +82,6 @@ export async function authMiddleware(
 
     next();
   } catch (error: any) {
-    cachedJWKS = null;
-
     if (error?.code === 'ERR_JWT_EXPIRED') {
       res.status(401).json({
         success: false,
