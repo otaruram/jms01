@@ -24,7 +24,6 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // Wajib untuk Production Preflight
 app.use(globalLimiter); // Apply global rate limiting
 
 // Body Parsing Middlewares
