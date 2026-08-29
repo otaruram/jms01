@@ -94,4 +94,12 @@ export class ProjectRepository {
       data: { status },
     });
   }
+
+  async delete(id: string) {
+    return await prisma.$transaction(async (tx) => {
+      await tx.projectCapital.deleteMany({ where: { projectId: id } });
+      await tx.installation.deleteMany({ where: { projectId: id } });
+      return await tx.project.delete({ where: { id } });
+    });
+  }
 }

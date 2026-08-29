@@ -28,6 +28,10 @@ export class SphRepository {
       select: { id: true, clientId: true, projectId: true, subject: true, totalAmount: true, createdAt: true, status: true },
     });
   }
+
+  async delete(id: string) {
+    return await prisma.sph.delete({ where: { id } });
+  }
 }
 
 export class BastRepository {
@@ -56,5 +60,9 @@ export class BastRepository {
       data,
       select: { id: true, clientId: true, projectId: true, description: true, createdAt: true, status: true },
     });
+  }
+
+  async delete(id: string) {
+    return await prisma.bast.delete({ where: { id } });
   }
 }

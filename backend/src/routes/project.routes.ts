@@ -35,4 +35,11 @@ router.patch(
   projectController.updateStatus
 );
 
+router.delete(
+  '/:id',
+  roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
+  activityLogger('Proyek'),
+  projectController.deleteProject
+);
+
 export default router;

@@ -27,4 +27,14 @@ export class DocumentController {
       res.status(500).json({ success: false, message: error.message });
     }
   };
+
+  deleteDocument = async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      await documentService.deleteDocument(id);
+      res.json({ success: true, message: 'Dokumen berhasil dihapus' });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 }

@@ -21,4 +21,8 @@ export class InventoryService {
     // Trigger installation and deduct stock (atomic transaction)
     return await inventoryRepository.createInstallationAndDeductStock(productId, projectId, qty);
   }
+
+  async deleteProduct(id: string) {
+    return await inventoryRepository.delete(id);
+  }
 }

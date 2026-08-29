@@ -63,4 +63,10 @@ export class OrderRepository {
       },
     });
   }
+
+  async delete(id: string) {
+    return await prisma.order.delete({
+      where: { id },
+    });
+  }
 }

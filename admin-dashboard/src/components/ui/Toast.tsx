@@ -34,39 +34,54 @@ export function Toast({ message, type = 'info', onClose }: ToastProps) {
   return (
     <div 
       className={`
-        flex items-center gap-3 px-4 py-3 bg-white rounded-lg shadow-lg border border-gray-100
-        transition-all duration-300 ease-in-out transform
-        ${isClosing ? 'opacity-0 translate-x-8' : 'opacity-100 translate-x-0'}
+        relative overflow-hidden flex items-center gap-3 px-5 py-4 bg-white rounded-xl shadow-2xl border 
+        ${type === 'success' ? 'border-emerald-100 shadow-emerald-500/10' : type === 'error' ? 'border-red-100 shadow-red-500/10' : 'border-blue-100 shadow-blue-500/10'}
+        transition-all duration-300 ease-out transform backdrop-blur-sm bg-white/95
+        ${isClosing ? 'opacity-0 scale-95 translate-x-8' : 'opacity-100 scale-100 translate-x-0'}
       `}
       style={{
-        minWidth: '300px',
-        maxWidth: '400px',
-        animation: isClosing ? 'none' : 'toast-slide-in 0.3s ease-out forwards'
+        minWidth: '320px',
+        maxWidth: '420px',
+        animation: isClosing ? 'none' : 'toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards'
       }}
     >
       <div className="flex-shrink-0">
         {getIcon()}
       </div>
-      <p className="flex-1 m-0 text-sm font-medium text-gray-800">
+      <p className="flex-1 m-0 text-[15px] leading-tight font-medium text-slate-800">
         {message}
       </p>
       <button 
         onClick={handleClose}
-        className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
+        className="flex-shrink-0 p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100/80 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200"
       >
         <X size={16} />
       </button>
 
+      {/* Progress Bar */}
+      <div 
+        className="absolute bottom-0 left-0 h-[3px] bg-gradient-to-r"
+        style={{
+          width: '100%',
+          backgroundImage: type === 'success' ? 'linear-gradient(to right, #10b981, #34d399)' : type === 'error' ? 'linear-gradient(to right, #ef4444, #f87171)' : 'linear-gradient(to right, #3b82f6, #60a5fa)',
+          animation: 'toast-progress 3.7s linear forwards'
+        }}
+      />
+
       <style>{`
         @keyframes toast-slide-in {
-          from {
+          0% {
             opacity: 0;
-            transform: translateX(100%);
+            transform: translateX(100%) scale(0.95);
           }
-          to {
+          100% {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateX(0) scale(1);
           }
+        }
+        @keyframes toast-progress {
+          0% { width: 100%; }
+          100% { width: 0%; }
         }
       `}</style>
     </div>

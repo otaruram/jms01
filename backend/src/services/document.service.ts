@@ -10,4 +10,8 @@ export class DocumentService {
   async getAll() {
     return await documentRepository.getAll();
   }
+
+  async deleteDocument(id: string) {
+    return await documentRepository.delete(id);
+  }
 }

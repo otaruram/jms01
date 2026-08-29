@@ -34,4 +34,8 @@ export class OrderService {
 
     return await orderRepository.updateStatus(orderId, newStatus);
   }
+
+  async deleteOrder(id: string) {
+    return await orderRepository.delete(id);
+  }
 }

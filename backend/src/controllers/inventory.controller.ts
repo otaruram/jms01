@@ -25,4 +25,14 @@ export class InventoryController {
       res.status(400).json({ success: false, message: error.message });
     }
   };
+
+  deleteProduct = async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      await inventoryService.deleteProduct(id);
+      res.json({ success: true, message: 'Barang berhasil dihapus' });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 }

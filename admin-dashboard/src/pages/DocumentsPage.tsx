@@ -3,7 +3,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { SlideOver } from '../components/ui/SlideOver';
-import { Printer, FileText, Plus } from 'lucide-react';
+import { Printer, FileText, Plus, Trash2 } from 'lucide-react';
 import { documentApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -47,6 +47,24 @@ export function DocumentsPage() {
       toast('Gagal menyimpan dokumen: ' + (error.response?.data?.message || error.message), 'error');
     }
   });
+
+  const deleteDocMutation = useMutation({
+    mutationFn: (id: string) => documentApi.deleteDocument(id),
+    onSuccess: () => {
+      toast('Dokumen berhasil dihapus permanen!', 'success');
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal menghapus dokumen: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Apakah Anda yakin ingin menghapus dokumen ini beserta kwitansi dan surat jalannya secara permanen?')) {
+      deleteDocMutation.mutate(id);
+    }
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -189,8 +207,8 @@ export function DocumentsPage() {
 
           {activeTab === 'history' && (
             <Card title="Riwayat Dokumen Pintar">
-              <div className="overflow-x-auto mt-4">
-                <table className="w-full text-left text-sm border-collapse">
+              <div className="overflow-x-auto mt-4 w-full">
+                <table className="w-full min-w-[800px] text-left text-sm border-collapse">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
                       <th className="p-3 font-semibold text-gray-600">ID Dokumen</th>
@@ -217,7 +235,7 @@ export function DocumentsPage() {
                           <td className="p-3 font-medium text-gray-900">
                             Rp {doc.amount?.toLocaleString('id-ID')}
                           </td>
-                          <td className="p-3 flex gap-2">
+                          <td className="p-3 flex gap-2 items-center">
                             <Button variant="ghost" size="sm" onClick={() => {
                               setDocData({
                                 clientId: doc.clientId,
@@ -248,6 +266,15 @@ export function DocumentsPage() {
                               });
                               setActiveTab('preview-sj');
                             }}>SJ</Button>
+                            {!isReadOnly && (
+                              <button 
+                                className="p-2 text-red-500 hover:bg-red-50 rounded"
+                                onClick={(e) => handleDelete(doc.id, e)}
+                                title="Hapus Dokumen"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))

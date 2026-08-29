@@ -41,6 +41,7 @@ export const inventoryApi = {
   getInventory: () => api.get('/inventory'),
   installProduct: (productId: string, projectId: string, qty: number) => 
     api.post('/inventory/install', { productId, projectId, qty }),
+  deleteProduct: (id: string) => api.delete(`/inventory/${id}`),
 };
 
 export const projectApi = {
@@ -52,12 +53,14 @@ export const projectApi = {
     api.post('/projects/capital', { projectId, type, amount, description }),
   updateStatus: (id: string, status: string) =>
     api.patch(`/projects/${id}/status`, { status }),
+  deleteProject: (id: string) => api.delete(`/projects/${id}`),
 };
 
 export const documentApi = {
   getDocuments: () => api.get('/documents'),
   createSmartDocument: (clientId: string, projectId: string, amount: number, itemsJson: string) =>
     api.post('/documents', { clientId, projectId, amount, itemsJson }),
+  deleteDocument: (id: string) => api.delete(`/documents/${id}`),
 };
 
 export const dashboardApi = {
@@ -68,6 +71,7 @@ export const orderApi = {
   getOrders: () => api.get('/orders'),
   createOrder: (clientId: string, total: number) => api.post('/orders', { clientId, total }),
   updateStatus: (id: string, status: string) => api.patch(`/orders/${id}/status`, { status }),
+  deleteOrder: (id: string) => api.delete(`/orders/${id}`),
 };
 
 export const sphBastApi = {
@@ -77,6 +81,8 @@ export const sphBastApi = {
     api.post('/sph', data),
   createBast: (data: { clientId: string; projectId: string; description: string }) =>
     api.post('/bast', data),
+  deleteSph: (id: string) => api.delete(`/sph/${id}`),
+  deleteBast: (id: string) => api.delete(`/bast/${id}`),
 };
 
 export const reportsApi = {

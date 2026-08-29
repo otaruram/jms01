@@ -35,4 +35,14 @@ export class OrderController {
       res.status(400).json({ success: false, message: error.message });
     }
   };
+
+  deleteOrder = async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      await orderService.deleteOrder(id);
+      res.json({ success: true, message: 'Pesanan berhasil dihapus' });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 }

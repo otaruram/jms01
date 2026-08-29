@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Download, FileCheck, FileSignature, Printer } from 'lucide-react';
+import { Download, FileCheck, FileSignature, Printer, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { sphBastApi } from '../lib/api';
@@ -61,6 +61,42 @@ export function SphBastPage() {
     queryKey: ['bast'],
     queryFn: () => sphBastApi.getBast().then(res => res.data.data)
   });
+
+  const deleteSphMutation = useMutation({
+    mutationFn: (id: string) => sphBastApi.deleteSph(id),
+    onSuccess: () => {
+      toast('SPH berhasil dihapus permanen!', 'success');
+      queryClient.invalidateQueries({ queryKey: ['sph'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal menghapus SPH: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
+  const deleteBastMutation = useMutation({
+    mutationFn: (id: string) => sphBastApi.deleteBast(id),
+    onSuccess: () => {
+      toast('BAST berhasil dihapus permanen!', 'success');
+      queryClient.invalidateQueries({ queryKey: ['bast'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal menghapus BAST: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
+  const handleDeleteSph = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Apakah Anda yakin ingin menghapus SPH ini secara permanen?')) {
+      deleteSphMutation.mutate(id);
+    }
+  };
+
+  const handleDeleteBast = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Apakah Anda yakin ingin menghapus BAST ini secara permanen?')) {
+      deleteBastMutation.mutate(id);
+    }
+  };
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,8 +287,8 @@ export function SphBastPage() {
 
       {/* Tampilan Riwayat */}
       <Card title={`Riwayat ${activeForm === 'sph' ? 'SPH' : 'BAST'}`}>
-        <div className="overflow-x-auto mt-4">
-          <table className="w-full text-left text-sm border-collapse">
+        <div className="overflow-x-auto mt-4 w-full">
+          <table className="w-full min-w-[700px] text-left text-sm border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="p-3 font-semibold text-gray-600">ID Dokumen</th>
@@ -281,7 +317,18 @@ export function SphBastPage() {
                         Rp {doc.totalAmount?.toLocaleString('id-ID')}
                       </td>
                       <td className="p-3 text-right">
-                        <Button variant="ghost" size="sm">Cetak</Button>
+                        <div className="flex justify-end gap-2 items-center">
+                          <Button variant="ghost" size="sm">Cetak</Button>
+                          {!isReadOnly && (
+                            <button 
+                              className="p-2 text-red-500 hover:bg-red-50 rounded"
+                              onClick={(e) => handleDeleteSph(doc.id, e)}
+                              title="Hapus SPH"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -303,7 +350,18 @@ export function SphBastPage() {
                         {new Date(doc.createdAt).toLocaleDateString('id-ID')}
                       </td>
                       <td className="p-3 text-right">
-                        <Button variant="ghost" size="sm">Cetak</Button>
+                        <div className="flex justify-end gap-2 items-center">
+                          <Button variant="ghost" size="sm">Cetak</Button>
+                          {!isReadOnly && (
+                            <button 
+                              className="p-2 text-red-500 hover:bg-red-50 rounded"
+                              onClick={(e) => handleDeleteBast(doc.id, e)}
+                              title="Hapus BAST"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))

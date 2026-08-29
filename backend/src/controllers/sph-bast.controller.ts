@@ -25,6 +25,16 @@ export class SphController {
       res.status(500).json({ success: false, message: error.message });
     }
   };
+
+  deleteSph = async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      await sphService.delete(id);
+      res.json({ success: true, message: 'SPH berhasil dihapus' });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 }
 
 export class BastController {
@@ -43,6 +53,16 @@ export class BastController {
       const { clientId, projectId, description } = req.body;
       const bast = await bastService.create(clientId, projectId, description);
       res.status(201).json({ success: true, data: bast });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
+  deleteBast = async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      await bastService.delete(id);
+      res.json({ success: true, message: 'BAST berhasil dihapus' });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
     }

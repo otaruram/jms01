@@ -3,7 +3,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Pagination } from '../components/ui/Pagination';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { orderApi } from '../lib/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -68,6 +68,24 @@ export function OrdersPage() {
     }
   });
 
+  const deleteOrderMutation = useMutation({
+    mutationFn: (id: string) => orderApi.deleteOrder(id),
+    onSuccess: () => {
+      toast('Pesanan berhasil dihapus permanen!', 'success');
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal menghapus pesanan: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Apakah Anda yakin ingin menghapus pesanan ini secara permanen?')) {
+      deleteOrderMutation.mutate(id);
+    }
+  };
+
   const orders = response?.data || [];
   
   const filteredOrders = orders.filter((o: Order) => 
@@ -108,8 +126,8 @@ export function OrdersPage() {
           </Button>
         </div>
 
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
+        <div className={styles.tableWrapper + " overflow-x-auto"}>
+          <table className={styles.table + " min-w-[700px]"}>
             <thead>
               <tr>
                 <th>ID Pesanan</th>
@@ -165,7 +183,15 @@ export function OrdersPage() {
                       )}
                     </td>
                     <td className={styles.textRight}>
-                      {/* Action buttons can go here if needed in the future */}
+                      {!isReadOnly && (
+                        <button 
+                          className="p-2 text-red-500 hover:bg-red-50 rounded"
+                          onClick={(e) => handleDelete(o.id, e)}
+                          title="Hapus Pesanan"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

@@ -19,6 +19,13 @@ router.post(
   sphController.create
 );
 
+router.delete(
+  '/sph/:id',
+  roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
+  activityLogger('SPH'),
+  sphController.deleteSph
+);
+
 // BAST endpoints
 router.get('/bast', bastController.getAll);
 router.post(
@@ -27,6 +34,13 @@ router.post(
   activityLogger('BAST'),
   validate(createBastSchema),
   bastController.create
+);
+
+router.delete(
+  '/bast/:id',
+  roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
+  activityLogger('BAST'),
+  bastController.deleteBast
 );
 
 export default router;

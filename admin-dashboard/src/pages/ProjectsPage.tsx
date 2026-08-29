@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Search, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+
 import { Pagination } from '../components/ui/Pagination';
 import { projectApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SlideOver } from '../components/ui/SlideOver';
 import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/ToastContext';
+import { Trash2 } from 'lucide-react';
 import styles from './ProjectsPage.module.css';
 
 interface Project {
@@ -25,6 +26,9 @@ export function ProjectsPage() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+  const [isDetailSlideOverOpen, setIsDetailSlideOverOpen] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'barang' | 'akomodasi'>('barang');
   const [newProject, setNewProject] = useState({ name: '', clientId: '', totalCapital: '' });
   const { isReadOnly } = useAuth();
   const queryClient = useQueryClient();
@@ -54,6 +58,18 @@ export function ProjectsPage() {
     }
   });
 
+  const deleteProjectMutation = useMutation({
+    mutationFn: (id: string) => projectApi.deleteProject(id),
+    onSuccess: () => {
+      toast('Proyek berhasil dihapus permanen!', 'success');
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      if (isDetailSlideOverOpen) setIsDetailSlideOverOpen(false);
+    },
+    onError: (error: any) => {
+      toast('Gagal menghapus proyek: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProject.name || !newProject.clientId) return;
@@ -67,6 +83,27 @@ export function ProjectsPage() {
       return res.data;
     }
   });
+
+  const { data: detailResponse, isLoading: isLoadingDetail } = useQuery({
+    queryKey: ['project', selectedProjectId],
+    queryFn: () => projectApi.getProjectDetails(selectedProjectId as string),
+    enabled: !!selectedProjectId && isDetailSlideOverOpen
+  });
+
+  const selectedProject = detailResponse?.data?.data;
+
+  const handleDeleteProject = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Apakah Anda yakin ingin menghapus proyek ini secara permanen?')) {
+      deleteProjectMutation.mutate(id);
+    }
+  };
+
+  const handleOpenDetail = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedProjectId(id);
+    setIsDetailSlideOverOpen(true);
+  };
 
   const projects = response?.data || [];
   
@@ -106,8 +143,8 @@ export function ProjectsPage() {
           </div>
         </div>
 
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
+        <div className={styles.tableWrapper + " overflow-x-auto"}>
+          <table className={styles.table + " min-w-[700px]"}>
             <thead>
               <tr>
                 <th>ID Proyek</th>
@@ -139,7 +176,7 @@ export function ProjectsPage() {
                 </tr>
               ) : (
                 paginatedProjects.map((p: Project) => (
-                  <tr key={p.id} className={styles.row} onClick={() => navigate(`/projects/${p.id}`)}>
+                  <tr key={p.id} className={styles.row}>
                     <td className={styles.cellId}>{p.id}</td>
                     <td className={styles.cellName}>{p.name}</td>
                     <td>{p.client?.name || '-'}</td>
@@ -164,9 +201,20 @@ export function ProjectsPage() {
                       )}
                     </td>
                     <td className={styles.textRight}>
-                      <Button variant="ghost" size="sm">
-                        Detail <ArrowRight size={14} style={{marginLeft: 4}} />
-                      </Button>
+                      <div className="flex justify-end gap-2 items-center">
+                        <Button variant="ghost" size="sm" onClick={(e) => handleOpenDetail(p.id, e)}>
+                          Detail <ArrowRight size={14} style={{marginLeft: 4}} />
+                        </Button>
+                        {!isReadOnly && (
+                          <button 
+                            className="p-2 text-red-500 hover:bg-red-50 rounded"
+                            onClick={(e) => handleDeleteProject(p.id, e)}
+                            title="Hapus Proyek"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -225,6 +273,72 @@ export function ProjectsPage() {
             </Button>
           </div>
         </form>
+      </SlideOver>
+
+      <SlideOver 
+        isOpen={isDetailSlideOverOpen} 
+        onClose={() => setIsDetailSlideOverOpen(false)} 
+        title={selectedProject ? `Detail Proyek: ${selectedProject.name}` : 'Detail Proyek'}
+      >
+        {isLoadingDetail ? (
+          <div className="p-8 text-center text-slate-500">Memuat detail proyek...</div>
+        ) : !selectedProject ? (
+          <div className="p-8 text-center text-slate-500">Pilih proyek untuk melihat detail.</div>
+        ) : (
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-gray-500">Klien</span>
+              <span className="font-medium text-gray-900">{selectedProject.client?.name || '-'}</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-xl border border-gray-100 bg-gray-50 flex flex-col gap-1">
+                <span className="text-xs text-gray-500 uppercase font-semibold">Total Modal Keseluruhan</span>
+                <span className="text-lg font-bold text-gray-900">Rp 15.000.000</span>
+              </div>
+              <div className="p-4 rounded-xl border border-gray-100 bg-blue-50 flex flex-col gap-1">
+                <span className="text-xs text-blue-500 uppercase font-semibold">Total Modal Barang</span>
+                <span className="text-lg font-bold text-blue-900">Rp 12.500.000</span>
+              </div>
+              <div className="p-4 rounded-xl border border-gray-100 bg-orange-50 flex flex-col gap-1">
+                <span className="text-xs text-orange-500 uppercase font-semibold">Total Modal Akomodasi</span>
+                <span className="text-lg font-bold text-orange-900">Rp 2.500.000</span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="flex gap-2 border-b border-gray-100 mb-4">
+                <button 
+                  className={`pb-2 px-4 text-sm font-medium transition-colors ${activeTab === 'barang' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+                  onClick={() => setActiveTab('barang')}
+                >
+                  Riwayat Barang
+                </button>
+                <button 
+                  className={`pb-2 px-4 text-sm font-medium transition-colors ${activeTab === 'akomodasi' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+                  onClick={() => setActiveTab('akomodasi')}
+                >
+                  Riwayat Akomodasi
+                </button>
+              </div>
+
+              {activeTab === 'barang' ? (
+                <div className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg text-center">
+                  Belum ada riwayat pemasangan barang untuk proyek ini.
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg text-center">
+                  Belum ada riwayat pengeluaran akomodasi untuk proyek ini.
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end mt-4 pt-4 border-t border-gray-100 gap-2">
+              <Button variant="outline" onClick={() => setIsDetailSlideOverOpen(false)}>Tutup</Button>
+              <Button onClick={() => alert('Fitur catat pengeluaran akan segera hadir')}>Catat Pengeluaran Proyek</Button>
+            </div>
+          </div>
+        )}
       </SlideOver>
     </div>
   );

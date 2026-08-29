@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { SlideOver } from '../components/ui/SlideOver';
 import { Pagination } from '../components/ui/Pagination';
-import { Plus, Search, Filter, ArrowDownToLine } from 'lucide-react';
+import { Plus, Search, Filter, ArrowDownToLine, Trash2 } from 'lucide-react';
 import { inventoryApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -55,6 +55,24 @@ export function InventoryPage() {
       toast('Gagal memotong stok', 'error');
     }
   });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: (id: string) => inventoryApi.deleteProduct(id),
+    onSuccess: () => {
+      toast('Barang berhasil dihapus permanen!', 'success');
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal menghapus barang: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('Apakah Anda yakin ingin menghapus barang ini beserta riwayat pemasangannya secara permanen?')) {
+      deleteProductMutation.mutate(id);
+    }
+  };
 
   const inventoryData = inventoryResponse?.data || [];
   
@@ -112,8 +130,8 @@ export function InventoryPage() {
           </Button>
         </div>
 
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
+        <div className={styles.tableWrapper + " overflow-x-auto"}>
+          <table className={styles.table + " min-w-[700px]"}>
             <thead>
               <tr>
                 <th>ID Barang</th>
@@ -150,7 +168,18 @@ export function InventoryPage() {
                       </span>
                     </td>
                     <td className={styles.textRight}>
-                      <Button variant="ghost" size="sm" onClick={() => setDetailProduct(item)}>Detail</Button>
+                      <div className="flex justify-end gap-2 items-center">
+                        <Button variant="ghost" size="sm" onClick={() => setDetailProduct(item)}>Detail</Button>
+                        {!isReadOnly && (
+                          <button 
+                            className="p-2 text-red-500 hover:bg-red-50 rounded"
+                            onClick={(e) => handleDelete(item.id, e)}
+                            title="Hapus Barang"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

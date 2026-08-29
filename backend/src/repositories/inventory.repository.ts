@@ -71,4 +71,11 @@ export class InventoryRepository {
       return installation;
     });
   }
+
+  async delete(id: string) {
+    return await prisma.$transaction(async (tx) => {
+      await tx.installation.deleteMany({ where: { productId: id } });
+      return await tx.product.delete({ where: { id } });
+    });
+  }
 }

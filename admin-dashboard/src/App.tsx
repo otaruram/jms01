@@ -5,7 +5,6 @@ import { DashboardLayout } from './components/layout/DashboardLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { ProjectsPage } from './pages/ProjectsPage';
-import { ProjectDetailPage } from './pages/ProjectDetailPage';
 import { DocumentsPage } from './pages/DocumentsPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { SphBastPage } from './pages/SphBastPage';
@@ -39,7 +38,6 @@ function AppRoutes() {
           <Route index element={<DashboardPage />} />
           <Route path="inventory" element={<InventoryPage />} />
           <Route path="projects" element={<ProjectsPage />} />
-          <Route path="projects/:id" element={<ProjectDetailPage />} />
           <Route path="documents" element={<DocumentsPage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="sph-bast" element={<SphBastPage />} />

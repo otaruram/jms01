@@ -47,4 +47,12 @@ export class DocumentRepository {
       },
     });
   }
+
+  async delete(id: string) {
+    return await prisma.$transaction(async (tx) => {
+      await tx.kwitansi.deleteMany({ where: { documentMasterId: id } });
+      await tx.suratJalan.deleteMany({ where: { documentMasterId: id } });
+      return await tx.documentMaster.delete({ where: { id } });
+    });
+  }
 }

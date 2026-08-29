@@ -59,4 +59,14 @@ export class ProjectController {
       res.status(500).json({ success: false, message: error.message });
     }
   };
+
+  deleteProject = async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      await projectService.deleteProject(id);
+      res.json({ success: true, message: 'Proyek berhasil dihapus permanen' });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 }

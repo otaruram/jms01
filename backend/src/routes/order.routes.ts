@@ -26,4 +26,11 @@ router.patch(
   orderController.updateStatus
 );
 
+router.delete(
+  '/:id',
+  roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
+  activityLogger('Pesanan'),
+  orderController.deleteOrder
+);
+
 export default router;

@@ -11,6 +11,10 @@ export class SphService {
   async create(clientId: string, projectId: string, subject: string, totalAmount: number, items: string) {
     return await sphRepository.create({ clientId, projectId, subject, totalAmount, items });
   }
+
+  async delete(id: string) {
+    return await sphRepository.delete(id);
+  }
 }
 
 export class BastService {
@@ -20,5 +24,9 @@ export class BastService {
 
   async create(clientId: string, projectId: string, description: string) {
     return await bastRepository.create({ clientId, projectId, description });
+  }
+
+  async delete(id: string) {
+    return await bastRepository.delete(id);
   }
 }

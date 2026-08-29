@@ -23,4 +23,11 @@ router.post(
   documentController.createSmartDocument
 );
 
+router.delete(
+  '/:id',
+  roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
+  activityLogger('Dokumen'),
+  documentController.deleteDocument
+);
+
 export default router;

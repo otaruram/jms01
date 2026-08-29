@@ -20,4 +20,11 @@ router.post(
   inventoryController.installProduct
 );
 
+router.delete(
+  '/:id',
+  roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
+  activityLogger('Inventaris'),
+  inventoryController.deleteProduct
+);
+
 export default router;
