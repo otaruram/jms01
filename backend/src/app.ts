@@ -18,7 +18,7 @@ const app = express();
 // Security Middlewares
 app.use(helmet()); // Secure HTTP headers
 
-const frontends = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : [];
+const frontends = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(s => s.trim()) : [];
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
@@ -27,7 +27,10 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || 
+        allowedOrigins.includes(origin) || 
+        origin.endsWith('.vercel.app') || 
+        origin.endsWith('.my.id')) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
