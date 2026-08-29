@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database';
+import jwt from 'jsonwebtoken';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -12,52 +13,37 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * JWT Authentication Middleware.
- * Verifies the Bearer token by calling Supabase API directly to ensure 100% compatibility.
+ * Verifies the Bearer token using jsonwebtoken and SUPABASE_JWT_SECRET.
  */
-export async function authMiddleware(
+export const authMiddleware = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-): Promise<void> {
+): Promise<void> => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ success: false, message: 'Token tidak ditemukan' });
+    return;
+  }
+
+  const token = authHeader.split(' ')[1];
+  
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({
-        success: false,
-        message: 'Akses ditolak. Token tidak ditemukan.'
-      });
-      return;
-    }
-
-    const token = authHeader.split(' ')[1];
-    
-    const apikey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
-    if (!process.env.SUPABASE_URL || !apikey) {
-      console.error("Missing Supabase env vars in backend!");
+    const secret = process.env.SUPABASE_JWT_SECRET;
+    if (!secret) {
+      console.error("Missing SUPABASE_JWT_SECRET in backend!");
       res.status(500).json({ success: false, message: 'Server configuration error' });
       return;
     }
 
-    // Call Supabase API to verify the token
-    const verifyResponse = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        apikey: apikey
-      }
-    });
-
-    if (!verifyResponse.ok) {
-      throw new Error('Invalid token from Supabase');
-    }
-
-    const payload = await verifyResponse.json();
-
+    // WAJIB gunakan secret dari Supabase, bukan secret custom
+    const decoded: any = jwt.verify(token, secret);
+    
     // Sync user to local database and fetch role
-    const userEmail = payload.email as string;
+    const userEmail = decoded.email as string;
     
     let dbUser = await prisma.user.findUnique({
-      where: { id: payload.id },
+      where: { id: decoded.sub },
     });
 
     if (!dbUser) {
@@ -65,9 +51,9 @@ export async function authMiddleware(
       const isSuperAdmin = userEmail === process.env.SUPER_ADMIN_EMAIL;
       dbUser = await prisma.user.create({
         data: {
-          id: payload.id as string,
+          id: decoded.sub as string,
           email: userEmail,
-          name: (payload.user_metadata as any)?.full_name || userEmail.split('@')[0],
+          name: (decoded.user_metadata as any)?.full_name || userEmail.split('@')[0],
           role: isSuperAdmin ? 'SUPER_ADMIN' : 'USER',
         },
       });
@@ -78,12 +64,8 @@ export async function authMiddleware(
       email: dbUser.email,
       role: dbUser.role,
     };
-
     next();
   } catch (error: any) {
-    res.status(401).json({
-      success: false,
-      message: 'Token tidak valid.'
-    });
+    res.status(401).json({ success: false, message: 'Token invalid atau kedaluwarsa', error: error.message });
   }
-}
+};
