@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Download, FileCheck, FileSignature, Printer } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { sphBastApi } from '../lib/api';
 import { useToast } from '../components/ui/ToastContext';
 import styles from './SphBastPage.module.css';
