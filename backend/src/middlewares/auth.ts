@@ -39,30 +39,10 @@ export const authMiddleware = async (
     // WAJIB gunakan secret dari Supabase, bukan secret custom
     const decoded: any = jwt.verify(token, secret);
     
-    // Sync user to local database and fetch role
-    const userEmail = decoded.email as string;
-    
-    let dbUser = await prisma.user.findUnique({
-      where: { id: decoded.sub },
-    });
-
-    if (!dbUser) {
-      // Auto-assign SUPER_ADMIN if email matches .env
-      const isSuperAdmin = userEmail === process.env.SUPER_ADMIN_EMAIL;
-      dbUser = await prisma.user.create({
-        data: {
-          id: decoded.sub as string,
-          email: userEmail,
-          name: (decoded.user_metadata as any)?.full_name || userEmail.split('@')[0],
-          role: isSuperAdmin ? 'SUPER_ADMIN' : 'USER',
-        },
-      });
-    }
-
     req.user = {
-      sub: dbUser.id,
-      email: dbUser.email,
-      role: dbUser.role,
+      sub: decoded.sub,
+      email: decoded.email,
+      name: (decoded.user_metadata as any)?.full_name,
     };
     next();
   } catch (error: any) {

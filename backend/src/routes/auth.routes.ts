@@ -7,22 +7,31 @@ const router = Router();
 router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.sub;
-    if (!userId) {
+    const email = req.user?.email;
+
+    if (!userId || !email) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const isSuperAdmin = email === process.env.SUPER_ADMIN_EMAIL;
+    const name = (req.user as any)?.name || email.split('@')[0];
+
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: {
+        id: userId,
+        email: email,
+        name: name,
+        role: isSuperAdmin ? 'SUPER_ADMIN' : 'USER',
+      },
       select: { id: true, email: true, name: true, role: true },
     });
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
     res.json({ success: true, data: user });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Internal server error' });
+  } catch (error: any) {
+    console.error('Error auto-creating user:', error);
+    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
 });
 
