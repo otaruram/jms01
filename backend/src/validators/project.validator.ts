@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const addCapitalSchema = z.object({
-  projectId: z.string().uuid({ message: 'projectId harus berupa UUID yang valid' }),
+  projectId: z.string().min(1, { message: 'ID wajib diisi' }),
   type: z.enum(['BARANG', 'AKOMODASI'], {
     message: 'type harus BARANG atau AKOMODASI',
   }),

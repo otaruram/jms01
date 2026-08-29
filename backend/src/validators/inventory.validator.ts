@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const installProductSchema = z.object({
-  productId: z.string().uuid({ message: 'productId harus berupa UUID yang valid' }),
-  projectId: z.string().uuid({ message: 'projectId harus berupa UUID yang valid' }),
+  productId: z.string().min(1, { message: 'productId wajib diisi' }),
+  projectId: z.string().min(1, { message: 'projectId wajib diisi' }),
   qty: z.number().int().positive({ message: 'qty harus bilangan bulat positif' }),
 });
 

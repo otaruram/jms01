@@ -12,7 +12,7 @@ export const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 };
 
 export const createOrderSchema = z.object({
-  clientId: z.string().uuid({ message: 'clientId harus berupa UUID yang valid' }),
+  clientId: z.string().min(1, { message: 'ID wajib diisi' }),
   total: z.number().positive({ message: 'total harus angka positif' }),
 });
 
