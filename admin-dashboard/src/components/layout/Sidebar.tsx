@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Box, Briefcase, FileText, ShoppingCart, FileCheck, BarChart3, LogOut, X, Settings } from 'lucide-react';
+import { LayoutDashboard, Box, Briefcase, FileText, ShoppingCart, FileCheck, BarChart3, LogOut, Settings } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -37,7 +37,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-export function Sidebar({ onClose }: SidebarProps) {
+export function Sidebar({}: SidebarProps) {
   const navigate = useNavigate();
   const { isSuperAdmin } = useAuth();
 
