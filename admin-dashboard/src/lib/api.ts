@@ -21,7 +21,11 @@ api.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       // Clear local session if token is rejected by backend
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {}
+      localStorage.clear();
+      sessionStorage.clear();
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

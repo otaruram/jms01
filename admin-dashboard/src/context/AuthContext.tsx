@@ -56,7 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Failed to fetch user role', error);
         } else {
           // Silent catch for 401
-          await supabase.auth.signOut();
+          try {
+            await supabase.auth.signOut();
+          } catch (e) {}
+          // Force clear storage if signOut fails
+          localStorage.clear();
+          sessionStorage.clear();
           if (window.location.pathname !== '/login') {
              window.location.href = '/login';
           }
