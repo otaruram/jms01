@@ -11,9 +11,11 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
+import { createRemoteJWKSet, jwtVerify } from 'jose';
+
 /**
  * JWT Authentication Middleware.
- * Verifies the Bearer token using jsonwebtoken and SUPABASE_JWT_SECRET.
+ * Verifies the Bearer token using jsonwebtoken (HS256) or jose (ES256/RS256 with JWKS).
  */
 export const authMiddleware = async (
   req: AuthenticatedRequest,
@@ -47,20 +49,30 @@ export const authMiddleware = async (
     console.log("🔍 [AUTH DETECT] Algoritma Token:", alg);
 
     // 2. VERIFIKASI BERDASARKAN ALGORITMA
-    let decoded: any;
+    let decodedPayload: any;
     if (alg === 'HS256') {
-      decoded = jwt.verify(token, secretOrKey, { algorithms: ['HS256'] });
+      decodedPayload = jwt.verify(token, secretOrKey, { algorithms: ['HS256'] });
     } else if (alg === 'ES256' || alg === 'RS256') {
-      const pubKey = secretOrKey.replace(/\\n/g, '\n');
-      decoded = jwt.verify(token, pubKey, { algorithms: [alg] });
+      // Gunakan JOSE untuk mengambil JWKS secara otomatis langsung dari Supabase
+      const supabaseUrl = process.env.SUPABASE_URL;
+      if (!supabaseUrl) {
+         throw new Error("SUPABASE_URL environment variable is missing, required for fetching JWKS.");
+      }
+      const jwksUrl = new URL(process.env.SUPABASE_JWKS_URL || `${supabaseUrl}/auth/v1/.well-known/jwks.json`);
+      const JWKS = createRemoteJWKSet(jwksUrl);
+      
+      const { payload } = await jwtVerify(token, JWKS, {
+        algorithms: [alg]
+      });
+      decodedPayload = payload;
     } else {
       throw new Error(`Algoritma ${alg} tidak didukung backend.`);
     }
     
     req.user = {
-      sub: decoded.sub,
-      email: decoded.email,
-      name: (decoded.user_metadata as any)?.full_name,
+      sub: decodedPayload.sub as string,
+      email: decodedPayload.email as string,
+      name: (decodedPayload.user_metadata as any)?.full_name,
     };
     next();
   } catch (error: any) {
