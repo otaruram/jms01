@@ -3,26 +3,12 @@ import { prisma } from '../config/database';
 
 // jose is ESM-only, so we use dynamic import
 let joseModule: any = null;
-let cachedJWKS: any = null;
 
 async function loadJose() {
   if (!joseModule) {
     joseModule = await import('jose');
   }
   return joseModule;
-}
-
-async function getJWKS() {
-  if (cachedJWKS) return cachedJWKS;
-
-  const jwksUrl = process.env.SUPABASE_JWKS_URL;
-  if (!jwksUrl) {
-    throw new Error('SUPABASE_JWKS_URL is not configured');
-  }
-
-  const jose = await loadJose();
-  cachedJWKS = jose.createRemoteJWKSet(new URL(jwksUrl));
-  return cachedJWKS;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -36,7 +22,7 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * JWT Authentication Middleware.
- * Verifies the Bearer token from `Authorization` header against Supabase JWKS.
+ * Verifies the Bearer token from `Authorization` header against SUPABASE_JWT_SECRET.
  */
 export async function authMiddleware(
   req: AuthenticatedRequest,
@@ -56,10 +42,16 @@ export async function authMiddleware(
 
     const token = authHeader.split(' ')[1];
     const jose = await loadJose();
-    const jwks = await getJWKS();
+    
+    const jwtSecret = process.env.SUPABASE_JWT_SECRET || process.env.SUPABASE_SECRET_KEY;
+    if (!jwtSecret) {
+      throw new Error('SUPABASE_JWT_SECRET is not configured');
+    }
+    
+    const secret = new TextEncoder().encode(jwtSecret);
 
-    const { payload } = await jose.jwtVerify(token, jwks, {
-      issuer: process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL}/auth/v1` : undefined,
+    const { payload } = await jose.jwtVerify(token, secret, {
+      algorithms: ['HS256'],
     });
 
     // Sync user to local database and fetch role
