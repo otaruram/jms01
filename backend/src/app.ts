@@ -18,26 +18,10 @@ const app = express();
 // Security Middlewares
 app.use(helmet()); // Secure HTTP headers
 
-const frontends = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(s => s.trim()) : [];
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  ...frontends
-];
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || 
-        allowedOrigins.includes(origin) || 
-        origin.endsWith('.vercel.app') || 
-        origin.endsWith('.my.id')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['http://localhost:5173', 'https://jms-admin-wine.vercel.app', 'https://jms-admin.my.id', 'https://jms-admin.vercel.app'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(globalLimiter); // Apply global rate limiting
 

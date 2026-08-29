@@ -2,19 +2,22 @@ import axios from 'axios';
 import { supabase } from './supabase';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: import.meta.env.VITE_API_URL,
 });
 
 api.interceptors.request.use(async (config) => {
   const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    // Hentikan request ke backend jika session belum siap untuk mencegah 401
+    throw new axios.Cancel("Session belum siap, membatalkan request API.");
+  }
+  
   if (session?.access_token) {
     config.headers.Authorization = `Bearer ${session.access_token}`;
   }
   return config;
-});
+}, (error) => Promise.reject(error));
 
 api.interceptors.response.use(
   (response) => response,
