@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           // Silent catch for 401
           try {
-            await supabase.auth.signOut();
+            await supabase.auth.signOut({ scope: 'local' });
           } catch (e) {}
           // Force clear storage if signOut fails
           localStorage.clear();

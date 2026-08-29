@@ -46,6 +46,7 @@ export const authMiddleware = async (
     };
     next();
   } catch (error: any) {
+    console.error("JWT VERIFY ERROR:", error.message);
     res.status(401).json({ success: false, message: 'Token invalid atau kedaluwarsa', error: error.message });
   }
 };

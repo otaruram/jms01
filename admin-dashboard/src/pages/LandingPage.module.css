@@ -154,3 +154,51 @@
   width: 20px;
   height: 20px;
 }
+
+/* Responsive Design for Multi-Device */
+@media screen and (max-width: 968px) {
+  .container {
+    flex-direction: column;
+  }
+  
+  .leftPanel {
+    flex: none;
+    padding: 2rem;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .heroContent {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+  }
+  
+  .rightPanel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    padding: 2rem;
+  }
+  
+  .loginCard {
+    max-width: 400px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .title {
+    font-size: 2rem;
+  }
+  
+  .logoTitle {
+    font-size: 1.125rem;
+  }
+  
+  .leftPanel, .rightPanel {
+    padding: 1.5rem;
+  }
+}

@@ -30,7 +30,7 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
 
     res.json({ success: true, data: user });
   } catch (error: any) {
-    console.error('Error auto-creating user:', error);
+    console.error("PRISMA ERROR DI AUTH:", error.message);
     res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
   }
 });
