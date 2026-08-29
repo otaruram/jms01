@@ -52,10 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (mounted) setUser(null);
         }
       } catch (error: any) {
-        if (error?.response?.status !== 401) {
-          console.error('Failed to fetch user role', error);
-        } else {
-          // Silent catch for 401
+        if (error?.response?.status === 401) {
+          // Hanya logout jika token benar-benar ditolak (401)
           try {
             await supabase.auth.signOut({ scope: 'local' });
           } catch (e) {}
@@ -65,8 +63,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (window.location.pathname !== '/login') {
              window.location.href = '/login';
           }
+          if (mounted) setUser(null);
+        } else {
+          // Jika 500 atau 403, JANGAN keluarkan user, biarkan session tetap ada
+          // Tapi kita bisa set default role sementara agar tidak crash
+          console.error('Failed to fetch user role, but keeping session active:', error);
+          if (mounted && !user) {
+             setUser({
+               id: session.user.id,
+               email: session.user.email || '',
+               name: session.user.user_metadata?.full_name || 'User',
+               role: 'USER' // Fallback role if backend is unreachable
+             });
+          }
         }
-        if (mounted) setUser(null);
       } finally {
         if (mounted) setLoading(false);
       }

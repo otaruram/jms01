@@ -18,7 +18,9 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
 
     const user = await prisma.user.upsert({
       where: { email },
-      update: {},
+      update: {
+        role: isSuperAdmin ? 'SUPER_ADMIN' : undefined
+      },
       create: {
         id: userId,
         email: email,
