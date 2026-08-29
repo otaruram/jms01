@@ -22,7 +22,7 @@ interface Project {
 }
 
 export function ProjectsPage() {
-  const navigate = useNavigate();
+
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
