@@ -47,6 +47,11 @@ export const authMiddleware = async (
     next();
   } catch (error: any) {
     console.error("JWT VERIFY ERROR:", error.message);
-    res.status(401).json({ success: false, message: 'Token invalid atau kedaluwarsa', error: error.message });
+    res.status(401).json({ 
+      success: false, 
+      message: 'Token invalid di Production', 
+      detail: error.message, // Ini akan memberi tahu apakah token expired atau secret salah
+      secretExists: !!process.env.SUPABASE_JWT_SECRET // Cek apakah env terbaca
+    });
   }
 };

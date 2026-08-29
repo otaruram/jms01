@@ -18,11 +18,13 @@ const app = express();
 // Security Middlewares
 app.use(helmet()); // Secure HTTP headers
 
-app.use(cors({
+const corsOptions = {
   origin: ['http://localhost:5173', 'https://jms-admin-wine.vercel.app', 'https://jms-admin.my.id', 'https://jms-admin.vercel.app'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Wajib untuk Production Preflight
 app.use(globalLimiter); // Apply global rate limiting
 
 // Body Parsing Middlewares
