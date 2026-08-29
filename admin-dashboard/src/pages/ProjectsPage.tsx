@@ -43,6 +43,17 @@ export function ProjectsPage() {
     }
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: (data: { id: string, status: string }) => projectApi.updateStatus(data.id, data.status),
+    onSuccess: () => {
+      toast('Status berhasil diubah!', 'success');
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal mengubah status: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProject.name || !newProject.clientId) return;
@@ -133,10 +144,24 @@ export function ProjectsPage() {
                     <td className={styles.cellName}>{p.name}</td>
                     <td>{p.client?.name || '-'}</td>
                     <td className="text-right pr-4">Rp {p.totalCapital.toLocaleString('id-ID')}</td>
-                    <td>
-                      <span className={`${styles.badge} ${p.status === 'Aktif' ? styles.badgeActive : styles.badgeDone}`}>
-                        {p.status}
-                      </span>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      {!isReadOnly ? (
+                        <select 
+                          className="border border-slate-200 rounded p-1 text-sm bg-white"
+                          value={p.status}
+                          onChange={(e) => updateStatusMutation.mutate({ id: p.id, status: e.target.value })}
+                          disabled={updateStatusMutation.isPending}
+                        >
+                          <option value="Aktif">Aktif</option>
+                          <option value="Selesai">Selesai</option>
+                          <option value="Tertunda">Tertunda</option>
+                          <option value="Dibatalkan">Dibatalkan</option>
+                        </select>
+                      ) : (
+                        <span className={`${styles.badge} ${p.status === 'Aktif' ? styles.badgeActive : styles.badgeDone}`}>
+                          {p.status}
+                        </span>
+                      )}
                     </td>
                     <td className={styles.textRight}>
                       <Button variant="ghost" size="sm">

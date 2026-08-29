@@ -18,4 +18,8 @@ export class ProjectService {
   async createProject(name: string, clientId: string, totalCapital: number) {
     return await projectRepository.create(name, clientId, totalCapital);
   }
+
+  async updateStatus(id: string, status: string) {
+    return await projectRepository.updateStatus(id, status);
+  }
 }

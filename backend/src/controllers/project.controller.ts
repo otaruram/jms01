@@ -48,4 +48,15 @@ export class ProjectController {
       res.status(400).json({ success: false, message: error.message });
     }
   };
+
+  updateStatus = async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      const { status } = req.body;
+      const project = await projectService.updateStatus(id, status);
+      res.json({ success: true, data: project, message: 'Status proyek berhasil diubah' });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 }

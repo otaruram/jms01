@@ -18,3 +18,7 @@ export const createProjectSchema = z.object({
 });
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
+
+export const updateProjectStatusSchema = z.object({
+  status: z.string().min(1, { message: 'Status wajib diisi' }),
+});

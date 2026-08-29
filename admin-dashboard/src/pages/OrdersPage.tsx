@@ -60,10 +60,11 @@ export function OrdersPage() {
     mutationFn: ({ id, status }: { id: string, status: string }) => 
       orderApi.updateStatus(id, status),
     onSuccess: () => {
+      toast('Status pesanan berhasil diubah!', 'success');
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
-    onError: () => {
-      alert('Gagal mengupdate status pesanan');
+    onError: (error: any) => {
+      toast('Gagal mengubah status: ' + (error.response?.data?.message || error.message), 'error');
     }
   });
 
@@ -90,7 +91,7 @@ export function OrdersPage() {
         )}
       </header>
 
-      <Card>
+      <Card title="Daftar Pesanan Berjalan">
         <div className={styles.tableControls}>
           <div className={styles.searchWrapper}>
             <Search className={styles.searchIcon} size={18} />
@@ -146,24 +147,25 @@ export function OrdersPage() {
                     <td>{new Date(o.createdAt).toLocaleDateString('id-ID')}</td>
                     <td className="text-right pr-4">Rp {o.total.toLocaleString('id-ID')}</td>
                     <td>
-                      <Badge variant={o.status.toLowerCase() as any}>
-                        {o.status === 'PAID' ? 'Sudah Bayar' : o.status === 'PROCESS' ? 'Proses' : 'Belum Bayar'}
-                      </Badge>
+                      {!isReadOnly ? (
+                        <select 
+                          className="border border-slate-200 rounded p-1 text-sm bg-white"
+                          value={o.status}
+                          onChange={(e) => updateStatusMutation.mutate({ id: o.id, status: e.target.value })}
+                          disabled={updateStatusMutation.isPending}
+                        >
+                          <option value="UNPAID">Belum Bayar</option>
+                          <option value="PROCESS">Proses</option>
+                          <option value="PAID">Lunas</option>
+                        </select>
+                      ) : (
+                        <Badge variant={o.status.toLowerCase() as any}>
+                          {o.status === 'PAID' ? 'Lunas' : o.status === 'PROCESS' ? 'Proses' : 'Belum Bayar'}
+                        </Badge>
+                      )}
                     </td>
                     <td className={styles.textRight}>
-                      {!isReadOnly && o.status !== 'PAID' && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          disabled={updateStatusMutation.isPending}
-                          onClick={() => {
-                            const nextStatus = o.status === 'UNPAID' ? 'PROCESS' : 'PAID';
-                            updateStatusMutation.mutate({ id: o.id, status: nextStatus });
-                          }}
-                        >
-                          Tandai {o.status === 'UNPAID' ? 'Proses' : 'Lunas'}
-                        </Button>
-                      )}
+                      {/* Action buttons can go here if needed in the future */}
                     </td>
                   </tr>
                 ))

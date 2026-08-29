@@ -50,6 +50,8 @@ export const projectApi = {
     api.post('/projects', { name, clientId, totalCapital }),
   addCapital: (projectId: string, type: string, amount: number, description: string) =>
     api.post('/projects/capital', { projectId, type, amount, description }),
+  updateStatus: (id: string, status: string) =>
+    api.patch(`/projects/${id}/status`, { status }),
 };
 
 export const documentApi = {

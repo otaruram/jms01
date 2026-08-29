@@ -11,7 +11,7 @@
 .container {
   width: 100%;
   max-width: 500px;
-  height: 100vh;
+  height: 100dvh; /* Mobile friendly height */
   background-color: var(--bg-card);
   box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
   display: flex;

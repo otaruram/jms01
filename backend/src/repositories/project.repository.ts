@@ -87,4 +87,11 @@ export class ProjectRepository {
       },
     });
   }
+
+  async updateStatus(id: string, status: string) {
+    return await prisma.project.update({
+      where: { id },
+      data: { status },
+    });
+  }
 }

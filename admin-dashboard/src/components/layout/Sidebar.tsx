@@ -56,12 +56,6 @@ export function Sidebar({ onClose }: SidebarProps) {
             <span className="text-sm text-slate-500">Sentosa</span>
           </div>
         </div>
-        {/* Close button for mobile */}
-        {onClose && (
-          <button onClick={onClose} className="md:hidden text-slate-400 hover:text-slate-900">
-            <X size={20} />
-          </button>
-        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto px-4 pb-8 space-y-6">

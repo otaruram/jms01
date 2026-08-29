@@ -3,12 +3,25 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ArrowLeft, Plus } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { projectApi } from '../lib/api';
 import styles from './ProjectDetailPage.module.css';
 
 export function ProjectDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'barang' | 'akomodasi'>('barang');
+
+  const { data: response, isLoading } = useQuery({
+    queryKey: ['project', id],
+    queryFn: () => projectApi.getProjectDetails(id as string),
+    enabled: !!id
+  });
+
+  const project = response?.data?.data;
+
+  if (isLoading) return <div className="p-8 text-center text-slate-500">Memuat detail proyek...</div>;
+  if (!project) return <div className="p-8 text-center text-slate-500">Proyek tidak ditemukan.</div>;
 
   return (
     <div className={styles.container}>
@@ -18,8 +31,8 @@ export function ProjectDetailPage() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className={styles.title}>Detail Proyek: {id}</h1>
-            <p className={styles.subtitle}>PT. Maju Mundur - Instalasi Jaringan Gedung A</p>
+            <h1 className={styles.title}>{project.name}</h1>
+            <p className={styles.subtitle}>{project.client?.name} - {project.id}</p>
           </div>
         </div>
         <Button><Plus size={16} /> Tambah Pengeluaran</Button>

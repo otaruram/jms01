@@ -22,6 +22,7 @@ interface Product {
 
 export function InventoryPage() {
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const { isReadOnly } = useAuth();
@@ -94,7 +95,7 @@ export function InventoryPage() {
         </div>
       </header>
 
-      <Card>
+      <Card title="Master Stok Inventaris">
         <div className={styles.tableControls}>
           <div className={styles.searchWrapper}>
             <Search className={styles.searchIcon} size={18} />
@@ -149,7 +150,7 @@ export function InventoryPage() {
                       </span>
                     </td>
                     <td className={styles.textRight}>
-                      <Button variant="ghost" size="sm">Detail</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setDetailProduct(item)}>Detail</Button>
                     </td>
                   </tr>
                 ))
@@ -228,6 +229,43 @@ export function InventoryPage() {
             </Button>
           </div>
         </form>
+      </SlideOver>
+
+      {/* Product Detail Popup */}
+      <SlideOver 
+        isOpen={!!detailProduct} 
+        onClose={() => setDetailProduct(null)} 
+        title="Detail Master Stok"
+      >
+        {detailProduct && (
+          <div className="flex flex-col gap-6 p-2">
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-2">
+              <span className="text-xs text-slate-500 font-bold uppercase">ID BARANG</span>
+              <span className="font-mono text-slate-900">{detailProduct.id}</span>
+            </div>
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-2">
+              <span className="text-xs text-slate-500 font-bold uppercase">NAMA BARANG</span>
+              <span className="text-slate-900">{detailProduct.name}</span>
+            </div>
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-2">
+              <span className="text-xs text-slate-500 font-bold uppercase">KATEGORI</span>
+              <span className="text-slate-900">{detailProduct.category}</span>
+            </div>
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-2">
+              <span className="text-xs text-slate-500 font-bold uppercase">STOK TERSEDIA</span>
+              <span className="text-2xl font-bold text-slate-900">{detailProduct.stock} <span className="text-base font-normal text-slate-500">{detailProduct.unit}</span></span>
+            </div>
+            <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 flex flex-col gap-2">
+              <span className="text-xs text-slate-500 font-bold uppercase">STATUS</span>
+              <div>
+                <span className={`${styles.statusBadge} ${styles[detailProduct.status.toLowerCase()]}`}>
+                  {detailProduct.status}
+                </span>
+              </div>
+            </div>
+            <Button className="w-full mt-4" onClick={() => setDetailProduct(null)}>Tutup</Button>
+          </div>
+        )}
       </SlideOver>
     </div>
   );
