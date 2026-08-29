@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     const fetchUserRole = async (session: any) => {
-      if (!session) {
+      if (!session || !session.access_token) {
         if (mounted) {
           setUser(null);
           setLoading(false);
@@ -51,8 +51,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           if (mounted) setUser(null);
         }
-      } catch (error) {
-        console.error('Failed to fetch user role', error);
+      } catch (error: any) {
+        if (error?.response?.status !== 401) {
+          console.error('Failed to fetch user role', error);
+        } else {
+          // Silent catch for 401
+          await supabase.auth.signOut();
+          if (window.location.pathname !== '/login') {
+             window.location.href = '/login';
+          }
+        }
         if (mounted) setUser(null);
       } finally {
         if (mounted) setLoading(false);

@@ -37,6 +37,7 @@ app.use(cors({
     }
   },
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(globalLimiter); // Apply global rate limiting
 
