@@ -1,0 +1,25 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.unpaid {
+  background-color: var(--status-unpaid-bg);
+  color: var(--status-unpaid-text);
+}
+
+.process {
+  background-color: var(--status-process-bg);
+  color: var(--status-process-text);
+}
+
+.paid {
+  background-color: var(--status-paid-bg);
+  color: var(--status-paid-text);
+}

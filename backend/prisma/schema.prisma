@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Product {
+  id            String         @id @default(uuid())
+  name          String
+  category      String
+  stock         Int
+  unit          String
+  status        String         @default("Aman")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  installations Installation[]
+
+  @@index([category])
+  @@index([status])
+}
+
+model Installation {
+  id        String   @id @default(uuid())
+  productId String
+  projectId String
+  qty       Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  @@index([productId])
+  @@index([projectId])
+}
+
+model Client {
+  id        String    @id @default(uuid())
+  name      String
+  contact   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+  orders    Order[]
+}
+
+model Project {
+  id            String           @id @default(uuid())
+  name          String
+  clientId      String
+  status        String           @default("Aktif")
+  totalCapital  Float            @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  client        Client           @relation(fields: [clientId], references: [id])
+  capitals      ProjectCapital[]
+  installations Installation[]
+
+  @@index([clientId])
+  @@index([status])
+}
+
+model ProjectCapital {
+  id          String   @id @default(uuid())
+  projectId   String
+  type        String // "BARANG" | "AKOMODASI"
+  amount      Float
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  project     Project  @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  clientId  String
+  total     Float
+  status    String   @default("UNPAID") // UNPAID, PROCESS, PAID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  client    Client   @relation(fields: [clientId], references: [id])
+
+  @@index([clientId])
+  @@index([status])
+}
+
+model DocumentMaster {
+  id         String      @id @default(uuid())
+  clientId   String
+  projectId  String
+  amount     Float
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  itemsJson  String
+  kwitansi   Kwitansi?
+  suratJalan SuratJalan?
+
+  @@index([clientId])
+  @@index([projectId])
+}
+
+model Kwitansi {
+  id               String         @id @default(uuid())
+  documentMasterId String         @unique
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  documentMaster   DocumentMaster @relation(fields: [documentMasterId], references: [id])
+}
+
+model SuratJalan {
+  id               String         @id @default(uuid())
+  documentMasterId String         @unique
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  documentMaster   DocumentMaster @relation(fields: [documentMasterId], references: [id])
+}
+
+// ==================== SPH & BAST ====================
+
+model Sph {
+  id          String   @id @default(uuid())
+  clientId    String
+  projectId   String
+  subject     String
+  totalAmount Float
+  items       String // JSON string of line items
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      String   @default("DRAFT") // DRAFT, SENT, ACCEPTED, REJECTED
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([status])
+}
+
+model Bast {
+  id          String   @id @default(uuid())
+  clientId    String
+  projectId   String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  status      String   @default("DRAFT") // DRAFT, SIGNED
+
+  @@index([clientId])
+  @@index([projectId])
+}
+
+// ==================== RBAC & SYSTEM ====================
+
+model User {
+  id        String   @id // Uses Supabase Auth UUID
+  email     String   @unique
+  name      String?
+  role      String   @default("USER") // SUPER_ADMIN, ADMIN, USER
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  module    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([module])
+  @@index([createdAt])
+}

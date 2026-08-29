@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jms_backend
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./backend/.env.production
+    environment:
+      - NODE_ENV=production
+    
+  # Frontend could be added here later if needed
+  # frontend:
+  #   build:
+  #     context: ./admin-dashboard
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "80:80"

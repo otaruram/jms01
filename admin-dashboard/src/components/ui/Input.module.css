@@ -1,0 +1,61 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  font-family: inherit;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 1px var(--accent-color);
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.hasError {
+  border-color: #EF4444;
+}
+
+.hasError:focus {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 1px #EF4444;
+}
+
+/* Automatically show red border for required fields that are empty, 
+   but only after the user has interacted with it or the form is submitted.
+   We can use :invalid pseudo class but we want to avoid it showing initially. 
+   Using a global .was-validated class on the form is standard practice. */
+:global(.was-validated) .input:invalid {
+  border-color: #EF4444;
+}
+
+:global(.was-validated) .input:invalid:focus {
+  box-shadow: 0 0 0 1px #EF4444;
+}
+
+.error {
+  font-size: 0.75rem;
+  color: #EF4444;
+}
