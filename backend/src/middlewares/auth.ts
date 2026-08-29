@@ -29,15 +29,18 @@ export const authMiddleware = async (
   const token = authHeader.split(' ')[1];
   
   try {
-    const secret = process.env.SUPABASE_JWT_SECRET;
-    if (!secret) {
+    const secretOrKey = process.env.SUPABASE_JWT_SECRET;
+    if (!secretOrKey) {
       console.error("Missing SUPABASE_JWT_SECRET in backend!");
       res.status(500).json({ success: false, message: 'Server configuration error' });
       return;
     }
 
-    // WAJIB gunakan secret dari Supabase, bukan secret custom
-    const decoded: any = jwt.verify(token, secret);
+    // Support for multiline PEM keys in environment variables
+    const publicKey = secretOrKey.replace(/\\n/g, '\n');
+
+    // WAJIB gunakan secret/public key dari Supabase, dan algoritma ES256
+    const decoded: any = jwt.verify(token, publicKey, { algorithms: ['ES256', 'HS256', 'RS256'] });
     
     req.user = {
       sub: decoded.sub,
@@ -46,7 +49,7 @@ export const authMiddleware = async (
     };
     next();
   } catch (error: any) {
-    console.error("JWT VERIFY ERROR:", error.message);
+    console.error("JWT VERIFY ERROR:", error.name, error.message);
     res.status(401).json({ 
       success: false, 
       message: 'Token invalid di Production', 
