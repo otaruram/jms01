@@ -18,4 +18,13 @@ export class DocumentController {
       res.status(500).json({ success: false, message: error.message });
     }
   };
+
+  getAll = async (req: Request, res: Response) => {
+    try {
+      const documents = await documentService.getAll();
+      res.status(200).json({ success: true, data: documents });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 }

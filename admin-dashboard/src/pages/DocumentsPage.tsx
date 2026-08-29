@@ -6,11 +6,12 @@ import { SlideOver } from '../components/ui/SlideOver';
 import { Printer, FileText, Plus } from 'lucide-react';
 import { documentApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '../components/ui/ToastContext';
 import styles from './DocumentsPage.module.css';
 
 export function DocumentsPage() {
-  const [activeTab, setActiveTab] = useState<'form' | 'preview-inv' | 'preview-kwt' | 'preview-sj'>('form');
+  const [activeTab, setActiveTab] = useState<'form' | 'preview-inv' | 'preview-kwt' | 'preview-sj' | 'history'>('form');
 
   // Shared state for the single input document generator
   const [docData, setDocData] = useState({
@@ -25,17 +26,25 @@ export function DocumentsPage() {
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
   const [docItems, setDocItems] = useState<{name: string, qty: number, price: number}[]>([{name: '', qty: 1, price: 0}]);
   const { isReadOnly } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: documentHistory, isLoading: isLoadingHistory } = useQuery({
+    queryKey: ['documents'],
+    queryFn: () => documentApi.getDocuments().then(res => res.data.data)
+  });
 
   const createDocMutation = useMutation({
     mutationFn: (data: { clientId: string, projectId: string, amount: number, items: string }) => 
       documentApi.createSmartDocument(data.clientId, data.projectId, data.amount, data.items),
     onSuccess: () => {
-      alert('Dokumen berhasil disimpan di Database!');
-      setActiveTab('preview-inv');
+      toast('Dokumen berhasil disimpan di Database!', 'success');
+      setActiveTab('history');
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Gagal menyimpan dokumen', error);
-      alert('Gagal menyimpan dokumen');
+      toast('Gagal menyimpan dokumen: ' + (error.response?.data?.message || error.message), 'error');
     }
   });
 
@@ -107,6 +116,13 @@ export function DocumentsPage() {
             >
               Surat Jalan
             </button>
+            <div className={styles.navDivider}>Arsip</div>
+            <button 
+              className={`${styles.navItem} ${activeTab === 'history' ? styles.activeNav : ''}`}
+              onClick={() => setActiveTab('history')}
+            >
+              <FileText size={18} /> Riwayat Dokumen
+            </button>
           </Card>
         </div>
 
@@ -171,7 +187,80 @@ export function DocumentsPage() {
             </Card>
           )}
 
-          {activeTab !== 'form' && (
+          {activeTab === 'history' && (
+            <Card title="Riwayat Dokumen Pintar">
+              <div className="overflow-x-auto mt-4">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="p-3 font-semibold text-gray-600">ID Dokumen</th>
+                      <th className="p-3 font-semibold text-gray-600">Klien / Proyek</th>
+                      <th className="p-3 font-semibold text-gray-600">Tanggal</th>
+                      <th className="p-3 font-semibold text-gray-600">Total Nominal</th>
+                      <th className="p-3 font-semibold text-gray-600">Arsip</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoadingHistory ? (
+                      <tr><td colSpan={5} className="p-4 text-center text-gray-500">Memuat riwayat dokumen...</td></tr>
+                    ) : documentHistory?.length > 0 ? (
+                      documentHistory.map((doc: any) => (
+                        <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="p-3 font-mono text-xs text-gray-500">{doc.id}</td>
+                          <td className="p-3">
+                            <div className="font-medium text-gray-900">{doc.clientId}</div>
+                            <div className="text-xs text-gray-500">{doc.projectId}</div>
+                          </td>
+                          <td className="p-3 text-gray-600">
+                            {new Date(doc.createdAt).toLocaleDateString('id-ID')}
+                          </td>
+                          <td className="p-3 font-medium text-gray-900">
+                            Rp {doc.amount?.toLocaleString('id-ID')}
+                          </td>
+                          <td className="p-3 flex gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => {
+                              setDocData({
+                                clientId: doc.clientId,
+                                projectId: doc.projectId,
+                                amount: doc.amount.toString(),
+                                date: doc.createdAt.split('T')[0],
+                                items: doc.itemsJson
+                              });
+                              setActiveTab('preview-inv');
+                            }}>Inv</Button>
+                            <Button variant="ghost" size="sm" onClick={() => {
+                              setDocData({
+                                clientId: doc.clientId,
+                                projectId: doc.projectId,
+                                amount: doc.amount.toString(),
+                                date: doc.createdAt.split('T')[0],
+                                items: doc.itemsJson
+                              });
+                              setActiveTab('preview-kwt');
+                            }}>Kwt</Button>
+                            <Button variant="ghost" size="sm" onClick={() => {
+                              setDocData({
+                                clientId: doc.clientId,
+                                projectId: doc.projectId,
+                                amount: doc.amount.toString(),
+                                date: doc.createdAt.split('T')[0],
+                                items: doc.itemsJson
+                              });
+                              setActiveTab('preview-sj');
+                            }}>SJ</Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr><td colSpan={5} className="p-4 text-center text-gray-500">Belum ada dokumen yang di-generate</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+
+          {activeTab !== 'form' && activeTab !== 'history' && (
             <Card className={styles.previewCard}>
               <div className={styles.previewHeader}>
                 <h3 className={styles.previewTitle}>
@@ -183,9 +272,9 @@ export function DocumentsPage() {
               </div>
               
               <div className={styles.documentCanvas}>
-                <div className={styles.docMockup}>
+                <div className={styles.docMockup} contentEditable={true} suppressContentEditableWarning={true}>
                   <div className={styles.docHeader}>
-                    <h2>PT. INOVASI TEKNOLOGI</h2>
+                    <h2>PT. JARINGAN MAKMUR SEJAHTERA</h2>
                     <p>Jl. Teknologi No. 45, Jakarta</p>
                   </div>
                   

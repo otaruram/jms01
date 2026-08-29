@@ -31,4 +31,20 @@ export class DocumentRepository {
       });
     });
   }
+
+  async getAll() {
+    return await prisma.documentMaster.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        clientId: true,
+        projectId: true,
+        amount: true,
+        createdAt: true,
+        itemsJson: true,
+        kwitansi: { select: { id: true } },
+        suratJalan: { select: { id: true } },
+      },
+    });
+  }
 }

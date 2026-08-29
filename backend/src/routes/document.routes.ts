@@ -9,6 +9,9 @@ import { activityLogger } from '../middlewares/activityLogger';
 const router = Router();
 const documentController = new DocumentController();
 
+// GET riwayat dokumen
+router.get('/', documentController.getAll);
+
 // Single Input API dengan Rate Limiting Ketat (10 req/menit)
 // Hanya SUPER_ADMIN dan ADMIN yang bisa submit dokumen
 router.post(

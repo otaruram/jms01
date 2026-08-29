@@ -9,6 +9,7 @@ import { orderApi } from '../lib/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SlideOver } from '../components/ui/SlideOver';
 import { Input } from '../components/ui/Input';
+import { useToast } from '../components/ui/ToastContext';
 import styles from './OrdersPage.module.css';
 
 interface Order {
@@ -26,17 +27,18 @@ export function OrdersPage() {
   const [newOrder, setNewOrder] = useState({ clientId: '', total: '' });
   const { isReadOnly } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const createOrderMutation = useMutation({
     mutationFn: (data: any) => orderApi.createOrder(data.clientId, parseFloat(data.total)),
     onSuccess: () => {
-      alert('Pesanan berhasil dibuat!');
+      toast('Pesanan berhasil dibuat!', 'success');
       setIsSlideOverOpen(false);
       setNewOrder({ clientId: '', total: '' });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
     onError: (error: any) => {
-      alert('Gagal membuat pesanan: ' + (error.response?.data?.message || error.message));
+      toast('Gagal membuat pesanan: ' + (error.response?.data?.message || error.message), 'error');
     }
   });
 

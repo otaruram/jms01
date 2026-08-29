@@ -53,6 +53,7 @@ export const projectApi = {
 };
 
 export const documentApi = {
+  getDocuments: () => api.get('/documents'),
   createSmartDocument: (clientId: string, projectId: string, amount: number, itemsJson: string) =>
     api.post('/documents', { clientId, projectId, amount, itemsJson }),
 };

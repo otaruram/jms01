@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SlideOver } from '../components/ui/SlideOver';
 import { Input } from '../components/ui/Input';
+import { useToast } from '../components/ui/ToastContext';
 import styles from './ProjectsPage.module.css';
 
 interface Project {
@@ -27,17 +28,18 @@ export function ProjectsPage() {
   const [newProject, setNewProject] = useState({ name: '', clientId: '', totalCapital: '' });
   const { isReadOnly } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const createProjectMutation = useMutation({
     mutationFn: (data: any) => projectApi.createProject(data.name, data.clientId, parseFloat(data.totalCapital)),
     onSuccess: () => {
-      alert('Proyek berhasil dibuat!');
+      toast('Proyek berhasil dibuat!', 'success');
       setIsSlideOverOpen(false);
       setNewProject({ name: '', clientId: '', totalCapital: '' });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
     onError: (error: any) => {
-      alert('Gagal membuat proyek: ' + (error.response?.data?.message || error.message));
+      toast('Gagal membuat proyek: ' + (error.response?.data?.message || error.message), 'error');
     }
   });
 

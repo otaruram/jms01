@@ -8,6 +8,7 @@ import { Plus, Search, Filter, ArrowDownToLine } from 'lucide-react';
 import { inventoryApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '../components/ui/ToastContext';
 import styles from './InventoryPage.module.css';
 
 interface Product {
@@ -25,6 +26,7 @@ export function InventoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const { isReadOnly } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Form states
   const [projectId, setProjectId] = useState('');
@@ -43,13 +45,13 @@ export function InventoryPage() {
     mutationFn: (data: { productId: string, projectId: string, qty: number }) => 
       inventoryApi.installProduct(data.productId, data.projectId, data.qty),
     onSuccess: () => {
-      alert('Pemasangan berhasil dan stok terpotong!');
+      toast('Pemasangan berhasil dan stok terpotong!', 'success');
       setIsSlideOverOpen(false);
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
     onError: (error) => {
       console.error('Gagal memotong stok', error);
-      alert('Gagal memotong stok');
+      toast('Gagal memotong stok', 'error');
     }
   });
 
@@ -68,7 +70,7 @@ export function InventoryPage() {
 
   const handleInstallSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!projectId || !productId || !qty) return alert('Mohon lengkapi data');
+    if (!projectId || !productId || !qty) return toast('Mohon lengkapi data', 'error');
     
     installMutation.mutate({ productId, projectId, qty: parseInt(qty) });
   };
@@ -185,7 +187,7 @@ export function InventoryPage() {
           <div className={styles.formSection}>
             <h4 className={styles.sectionTitle}>Pilih Barang</h4>
             <div className={styles.itemRow}>
-              <div style={{flex: 2}}>
+              <div className={styles.productInput}>
                 <Input 
                   placeholder="ID Barang (cth: a1b2...)" 
                   value={productId}
@@ -193,7 +195,7 @@ export function InventoryPage() {
                   required
                 />
               </div>
-              <div style={{flex: 1}}>
+              <div className={styles.qtyInput}>
                 <Input 
                   type="number" 
                   placeholder="Qty" 

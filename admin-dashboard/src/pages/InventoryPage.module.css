@@ -180,6 +180,14 @@
   gap: 1rem;
 }
 
+.productInput {
+  flex: 2;
+}
+
+.qtyInput {
+  flex: 1;
+}
+
 .addItemBtn {
   align-self: flex-start;
   color: var(--text-secondary);
@@ -226,6 +234,11 @@
 
   .itemRow {
     flex-direction: column;
+  }
+  
+  .productInput, .qtyInput {
+    width: 100%;
+    flex: none;
   }
 
   .formActions {
