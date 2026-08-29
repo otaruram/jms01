@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Toast, ToastProps } from './Toast';
+import { createContext, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
+import { Toast } from './Toast';
+import type { ToastProps } from './Toast';
 
 interface ToastContextType {
   toast: (message: string, type?: ToastProps['type']) => void;
@@ -8,7 +10,7 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<(ToastProps & { id: number })[]>([]);
+  const [toasts, setToasts] = useState<{ id: number; message: string; type?: ToastProps['type'] }[]>([]);
 
   const toast = (message: string, type: ToastProps['type'] = 'info') => {
     const id = Date.now();
