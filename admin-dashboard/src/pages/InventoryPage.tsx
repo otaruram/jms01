@@ -209,6 +209,18 @@ export function InventoryPage() {
 
           <div className={styles.formActions}>
             <Button variant="outline" type="button" onClick={() => setIsSlideOverOpen(false)}>Batal</Button>
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => {
+                setProjectId('PRJ-DEMO-01');
+                setProductId('INV-DEMO-01');
+                setQty('5');
+              }}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              Auto Fill (Dev)
+            </Button>
             <Button type="submit" disabled={installMutation.isPending}>
               {installMutation.isPending ? 'Memproses...' : 'Buat & Potong Stok'}
             </Button>
