@@ -46,7 +46,7 @@ interface SidebarProps {
 
 export function Sidebar(_props: SidebarProps) {
   const navigate = useNavigate();
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, user } = useAuth();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -107,7 +107,24 @@ export function Sidebar(_props: SidebarProps) {
         )}
       </nav>
 
-      <div className="p-4 border-t border-slate-200">
+      <div className="p-4 border-t border-slate-200 space-y-2">
+        <NavLink 
+          to="/profile"
+          className={({ isActive }) => 
+            isActive 
+              ? 'flex w-full items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-50 text-blue-700 transition-colors' 
+              : 'flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors'
+          }
+        >
+          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+            {user?.name ? user.name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex flex-col flex-1 overflow-hidden text-left">
+            <span className="font-semibold text-sm truncate">{user?.name || 'Pengguna'}</span>
+            <span className="text-xs opacity-80 truncate">{user?.email}</span>
+          </div>
+        </NavLink>
+
         <button 
           className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
           onClick={handleLogout}

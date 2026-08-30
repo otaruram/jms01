@@ -13,6 +13,7 @@ import { SystemSettingsPage } from './pages/SystemSettingsPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { PdfToolsPage } from './pages/PdfToolsPage';
 import { LandingPage } from './pages/LandingPage';
+import { ProfileSettingsPage } from './pages/ProfileSettingsPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient({
@@ -47,6 +48,7 @@ function AppRoutes() {
           <Route path="pdf-tools" element={<PdfToolsPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="system" element={<SystemSettingsPage />} />
+          <Route path="profile" element={<ProfileSettingsPage />} />
         </Route>
     </Routes>
   );
