@@ -88,16 +88,7 @@ export function ProfileSettingsPage() {
               </div>
 
               <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
-                {isEditing ? (
-                  <>
-                    <Button variant="outline" onClick={() => setIsEditing(false)}>Batal</Button>
-                    <Button className="flex items-center gap-2" onClick={handleSave}>
-                      <Save size={16} /> Simpan Perubahan
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={() => setIsEditing(true)}>Edit Profil</Button>
-                )}
+                <p className="text-xs text-slate-400 italic">Pembaruan profil sedang dinonaktifkan sementara.</p>
               </div>
             </div>
           </Card>
