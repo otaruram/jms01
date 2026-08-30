@@ -6,7 +6,7 @@ import { SlideOver } from '../components/ui/SlideOver';
 import { Pagination } from '../components/ui/Pagination';
 import { Plus, Search, FileText, Trash2 } from 'lucide-react';
 import { AlertModal } from '../components/ui/AlertModal';
-import { taxInvoiceApi } from '../lib/api';
+import { taxInvoiceApi, projectApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '../components/ui/ToastContext';
@@ -45,6 +45,14 @@ export function TaxInvoicePage() {
     queryKey: ['taxInvoices', currentPage],
     queryFn: async () => {
       const res = await taxInvoiceApi.getAll({ page: currentPage, limit: 10 });
+      return res.data;
+    }
+  });
+
+  const { data: projectsResponse } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const res = await projectApi.getProjects();
       return res.data;
     }
   });
@@ -291,13 +299,19 @@ export function TaxInvoicePage() {
               variant="outline" 
               type="button" 
               onClick={() => {
-                setInvoiceNo('010.000-24.98765432');
-                setClientId('CLI-DEMO-01');
-                setProjectId('PRJ-DEMO-01');
+                const firstProject = projectsResponse?.data?.[0];
+                if (firstProject) {
+                  // Get dynamic ID from the first project in database
+                  setClientId(firstProject.clientId || firstProject.client?.id || '');
+                  setProjectId(firstProject.id || '');
+                } else {
+                  toast('Proyek/Klien tidak ditemukan di database. Pastikan ada minimal 1 proyek.', 'error');
+                }
+                setInvoiceNo(`010.000-${new Date().getFullYear()}.${Math.floor(10000000 + Math.random() * 90000000)}`);
                 setDppAmount('10000000');
                 setTaxAmount('1100000');
                 setDate(new Date().toISOString().split('T')[0]);
-                setDescription('Penagihan Termin 1');
+                setDescription('Penagihan Termin 1 (Auto Fill)');
               }}
               className="text-blue-600 border-blue-600 hover:bg-blue-50"
             >
