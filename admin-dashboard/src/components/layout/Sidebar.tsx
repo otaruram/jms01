@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Box, Briefcase, FileText, ShoppingCart, FileCheck, BarChart3, LogOut, Settings, Wallet } from 'lucide-react';
+import { LayoutDashboard, Box, Briefcase, FileText, ShoppingCart, FileCheck, BarChart3, LogOut, Settings, Wallet, FileSpreadsheet } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -23,6 +23,7 @@ const navGroups = [
     label: 'ADMINISTRASI',
     items: [
       { name: 'Dokumen', path: '/documents', icon: FileText },
+      { name: 'Faktur Pajak', path: '/tax-invoices', icon: FileSpreadsheet },
       { name: 'SPH & BAST', path: '/sph-bast', icon: FileCheck },
     ]
   },

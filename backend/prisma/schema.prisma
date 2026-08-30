@@ -47,9 +47,10 @@ model Client {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   userId    String?
-  user      User?     @relation(fields: [userId], references: [id])
-  orders    Order[]
-  projects  Project[]
+  user        User?        @relation(fields: [userId], references: [id])
+  orders      Order[]
+  projects    Project[]
+  taxInvoices TaxInvoice[]
 
   @@index([userId])
 }
@@ -68,6 +69,7 @@ model Project {
   client        Client           @relation(fields: [clientId], references: [id])
   user          User?            @relation(fields: [userId], references: [id])
   capitals      ProjectCapital[]
+  taxInvoices   TaxInvoice[]
 
   @@index([clientId])
   @@index([status])
@@ -184,9 +186,10 @@ model User {
   documents DocumentMaster[]
   expenses  Expense[]
   orders    Order[]
-  products  Product[]
-  projects  Project[]
-  sphs      Sph[]
+  products    Product[]
+  projects    Project[]
+  sphs        Sph[]
+  taxInvoices TaxInvoice[]
 
   @@index([role])
 }
@@ -217,6 +220,30 @@ model Expense {
   project     Project? @relation(fields: [projectId], references: [id])
   user        User?    @relation(fields: [userId], references: [id])
 
+  @@index([projectId])
+  @@index([userId])
+}
+
+model TaxInvoice {
+  id          String   @id @default(uuid())
+  invoiceNo   String   @unique
+  clientId    String
+  projectId   String?
+  dppAmount   Float
+  taxAmount   Float
+  date        DateTime @default(now())
+  description String?
+  status      String   @default("DRAFT")
+  
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  client      Client   @relation(fields: [clientId], references: [id])
+  project     Project? @relation(fields: [projectId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
   @@index([projectId])
   @@index([userId])
 }

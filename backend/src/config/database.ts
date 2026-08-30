@@ -27,7 +27,8 @@ export const prisma = basePrisma.$extends({
           'Sph',
           'Bast',
           'Expense',
-          'ActivityLog'
+          'ActivityLog',
+          'TaxInvoice'
         ];
 
         if (ctx && modelsWithUser.includes(model)) {

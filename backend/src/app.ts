@@ -14,6 +14,7 @@ import systemRoutes from './routes/system.routes';
 import authRoutes from './routes/auth.routes';
 import reportsRoutes from './routes/reports.routes';
 import expenseRoutes from './routes/expense.routes';
+import taxInvoiceRoutes from './routes/tax-invoice.routes';
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/tax-invoices', taxInvoiceRoutes);
 app.use('/api', sphBastRoutes); // /api/sph and /api/bast
 app.use('/api/system', systemRoutes);
 app.use('/api/reports', reportsRoutes);

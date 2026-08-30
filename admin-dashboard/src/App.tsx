@@ -14,6 +14,7 @@ import { ExpensesPage } from './pages/ExpensesPage';
 import { PdfToolsPage } from './pages/PdfToolsPage';
 import { LandingPage } from './pages/LandingPage';
 import { ProfileSettingsPage } from './pages/ProfileSettingsPage';
+import { TaxInvoicePage } from './pages/TaxInvoicePage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient({
@@ -44,6 +45,7 @@ function AppRoutes() {
           <Route path="documents" element={<DocumentsPage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="sph-bast" element={<SphBastPage />} />
+          <Route path="tax-invoices" element={<TaxInvoicePage />} />
           <Route path="expenses" element={<ExpensesPage />} />
           <Route path="pdf-tools" element={<PdfToolsPage />} />
           <Route path="reports" element={<ReportsPage />} />

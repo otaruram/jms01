@@ -114,4 +114,11 @@ export const expenseApi = {
   deleteExpense: (id: string) => api.delete(`/expenses/${id}`),
 };
 
+export const taxInvoiceApi = {
+  getAll: (params?: PaginationParams) => api.get('/tax-invoices', { params }),
+  create: (data: any) => api.post('/tax-invoices', data),
+  updateStatus: (id: string, status: string) => api.patch(`/tax-invoices/${id}/status`, { status }),
+  delete: (id: string) => api.delete(`/tax-invoices/${id}`),
+};
+
 export default api;
