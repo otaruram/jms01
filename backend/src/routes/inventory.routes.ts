@@ -10,6 +10,7 @@ const inventoryController = new InventoryController();
 
 // Read access is available for all authenticated users (SUPER_ADMIN, ADMIN, USER)
 router.get('/', inventoryController.getInventory);
+router.get('/installations', inventoryController.getInstallations);
 
 // Write access is only for SUPER_ADMIN and ADMIN
 router.post(

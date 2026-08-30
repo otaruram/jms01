@@ -7,6 +7,10 @@ export class InventoryService {
     return await inventoryRepository.findAll(skip, take);
   }
 
+  async getInstallations(skip: number, take: number) {
+    return await inventoryRepository.getInstallations(skip, take);
+  }
+
   async createProduct(data: { name: string; category: string; stock: number; unit: string; status?: string }) {
     return await inventoryRepository.create(data);
   }

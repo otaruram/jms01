@@ -38,7 +38,10 @@ api.interceptors.response.use(
 );
 
 export const inventoryApi = {
-  getInventory: () => api.get('/inventory'),
+  getInventory: (params?: PaginationParams) => 
+    api.get('/inventory', { params }),
+  getInstallations: (params?: PaginationParams) => 
+    api.get('/inventory/installations', { params }),
   createProduct: (data: { name: string; category: string; stock: number; unit: string; status?: string }) => 
     api.post('/inventory', data),
   addStock: (id: string, qty: number) => api.post(`/inventory/${id}/stock`, { qty }),

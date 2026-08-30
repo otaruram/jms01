@@ -21,6 +21,22 @@ export class InventoryRepository {
     return { data, total };
   }
 
+  async getInstallations(skip: number, take: number) {
+    const [data, total] = await Promise.all([
+      prisma.installation.findMany({
+        include: {
+          product: { select: { name: true, unit: true } },
+          project: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
+      prisma.installation.count(),
+    ]);
+    return { data, total };
+  }
+
   async create(data: { name: string; category: string; stock: number; unit: string; status?: string }) {
     let status = data.status;
     if (!status) {

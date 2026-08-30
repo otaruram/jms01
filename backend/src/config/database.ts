@@ -27,9 +27,10 @@ export const prisma = basePrisma.$extends({
           'Sph',
           'Bast',
           'Expense',
+          'ActivityLog'
         ];
 
-        if (ctx && ctx.role !== 'SUPER_ADMIN' && modelsWithUser.includes(model)) {
+        if (ctx && modelsWithUser.includes(model)) {
           const anyArgs = args as any;
           
           if (['findMany', 'findFirst', 'count', 'updateMany', 'deleteMany'].includes(operation)) {

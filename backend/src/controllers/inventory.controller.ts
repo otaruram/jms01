@@ -15,6 +15,16 @@ export class InventoryController {
     }
   };
 
+  getInstallations = async (req: Request, res: Response) => {
+    try {
+      const { skip, take, page, limit } = parsePagination(req.query);
+      const { data, total } = await inventoryService.getInstallations(skip, take);
+      res.json(paginatedResponse(data, total, page, limit));
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
   createProduct = async (req: Request, res: Response) => {
     try {
       const data = req.body;

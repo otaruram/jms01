@@ -21,6 +21,14 @@ interface Product {
   status: string;
 }
 
+interface Installation {
+  id: string;
+  qty: number;
+  createdAt: string;
+  product: { name: string; unit: string };
+  project: { name: string };
+}
+
 export function InventoryPage() {
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
@@ -52,6 +60,14 @@ export function InventoryPage() {
     queryKey: ['inventory'],
     queryFn: async () => {
       const res = await inventoryApi.getInventory();
+      return res.data;
+    }
+  });
+
+  const { data: installationsResponse, isLoading: isLoadingInstallations } = useQuery({
+    queryKey: ['installations'],
+    queryFn: async () => {
+      const res = await inventoryApi.getInstallations();
       return res.data;
     }
   });
@@ -263,6 +279,47 @@ export function InventoryPage() {
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
+        </div>
+      </Card>
+
+      <Card title="Riwayat Pemasangan Barang">
+        <div className={styles.tableWrapper + " overflow-x-auto mt-4"}>
+          <table className={styles.table + " min-w-[700px]"}>
+            <thead>
+              <tr>
+                <th>ID Pemasangan</th>
+                <th>Tanggal</th>
+                <th>Proyek Tujuan</th>
+                <th>Nama Barang</th>
+                <th className="text-right pr-4">Jumlah (Qty)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoadingInstallations ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-gray-500">
+                    Memuat riwayat pemasangan...
+                  </td>
+                </tr>
+              ) : !installationsResponse?.data || installationsResponse.data.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-8 text-gray-500">
+                    Belum ada riwayat pemasangan
+                  </td>
+                </tr>
+              ) : (
+                installationsResponse.data.map((item: Installation) => (
+                  <tr key={item.id}>
+                    <td className={styles.cellId + " text-xs"}>{item.id}</td>
+                    <td>{new Date(item.createdAt).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="font-medium text-slate-700">{item.project?.name || 'N/A'}</td>
+                    <td>{item.product?.name || 'N/A'}</td>
+                    <td className="text-right pr-4 font-semibold text-slate-800">{item.qty} {item.product?.unit}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
 
