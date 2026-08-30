@@ -101,11 +101,12 @@ export const sphBastApi = {
 };
 
 export const reportsApi = {
+  getProfitLoss: (months: number) => api.get(`/reports/profit-loss?months=${months}`),
   getFinance: () => api.get('/reports/finance'),
   getProjects: () => api.get('/reports/projects'),
   getTax: () => api.get('/reports/tax'),
-  exportFile: (type: string, format: 'pdf' | 'excel') => 
-    api.get(`/reports/export?type=${type}&format=${format}`, { responseType: 'blob' })
+  exportFile: (type: string, format: 'pdf' | 'excel', months?: number) => 
+    api.get(`/reports/export?type=${type}&format=${format}${months ? `&months=${months}` : ''}`, { responseType: 'blob' })
 };
 
 export const expenseApi = {

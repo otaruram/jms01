@@ -7,7 +7,16 @@ import { reportsApi } from '../lib/api';
 import styles from './ReportsPage.module.css';
 
 export function ReportsPage() {
-  const [activeTab, setActiveTab] = useState<'finance' | 'projects' | 'tax'>('finance');
+  const [activeTab, setActiveTab] = useState<'profit-loss' | 'finance' | 'projects' | 'tax'>('profit-loss');
+  const [monthsFilter, setMonthsFilter] = useState<number>(3);
+
+  const { data: profitLossRes, isLoading: isLoadingProfitLoss } = useQuery({
+    queryKey: ['reports', 'profit-loss', monthsFilter],
+    queryFn: async () => {
+      const res = await reportsApi.getProfitLoss(monthsFilter);
+      return res.data;
+    }
+  });
 
   const { data: financeRes, isLoading: isLoadingFinance } = useQuery({
     queryKey: ['reports', 'finance'],
@@ -33,13 +42,14 @@ export function ReportsPage() {
     }
   });
 
+  const profitLossData = profitLossRes?.data || [];
   const financeData = financeRes?.data || [];
   const projectsData = projectsRes?.data || [];
   const taxData = taxRes?.data || [];
 
   const handleExport = async (format: 'pdf' | 'excel') => {
     try {
-      const response = await reportsApi.exportFile(activeTab, format);
+      const response = await reportsApi.exportFile(activeTab, format, activeTab === 'profit-loss' ? monthsFilter : undefined);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -64,11 +74,18 @@ export function ReportsPage() {
 
       <div className={styles.tabsGrid}>
         <Card 
+          className={`${styles.tabCard} ${activeTab === 'profit-loss' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('profit-loss')}
+        >
+          <span className="text-xl">💰</span>
+          <span className={styles.tabText}>Laba Rugi (Cash Flow)</span>
+        </Card>
+        <Card 
           className={`${styles.tabCard} ${activeTab === 'finance' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('finance')}
         >
           <FileText size={20} className={activeTab === 'finance' ? styles.iconActive : styles.icon} />
-          <span className={styles.tabText}>Rekapan Dokumen (Inv/Kwt/SJ)</span>
+          <span className={styles.tabText}>Rekapan Dokumen</span>
         </Card>
         <Card 
           className={`${styles.tabCard} ${activeTab === 'projects' ? styles.activeTab : ''}`}
@@ -88,11 +105,30 @@ export function ReportsPage() {
 
       <Card>
         <div className={styles.reportHeader}>
-          <h2 className={styles.reportTitle}>
-            {activeTab === 'finance' && "Rekapan Dokumen Administrasi"}
-            {activeTab === 'projects' && "Rekapan Modal Proyek"}
-            {activeTab === 'tax' && "Rekapan Faktur Pajak"}
-          </h2>
+          <div className="flex flex-col gap-2">
+            <h2 className={styles.reportTitle}>
+              {activeTab === 'profit-loss' && "Laporan Laba Rugi (Cash Flow)"}
+              {activeTab === 'finance' && "Rekapan Dokumen Administrasi"}
+              {activeTab === 'projects' && "Rekapan Modal Proyek"}
+              {activeTab === 'tax' && "Rekapan Faktur Pajak"}
+            </h2>
+            
+            {activeTab === 'profit-loss' && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm font-medium text-slate-600">Periode:</span>
+                <select 
+                  value={monthsFilter}
+                  onChange={(e) => setMonthsFilter(parseInt(e.target.value))}
+                  className="border border-slate-200 rounded-md px-3 py-1.5 text-sm bg-white outline-none focus:border-blue-500"
+                >
+                  <option value={3}>3 Bulan Terakhir</option>
+                  <option value={6}>6 Bulan Terakhir</option>
+                  <option value={9}>9 Bulan Terakhir</option>
+                  <option value={12}>1 Tahun Terakhir</option>
+                </select>
+              </div>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => handleExport('excel')}>
               <Download size={16} style={{marginRight: 8}}/> Export Excel
@@ -104,6 +140,39 @@ export function ReportsPage() {
         </div>
 
         <div className={styles.tableWrapper}>
+          {activeTab === 'profit-loss' && (
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Bulan & Tahun</th>
+                  <th className="text-right">Total Pemasukan</th>
+                  <th className="text-right">Total Pengeluaran</th>
+                  <th className="text-right pr-4">Laba/Rugi Bersih</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoadingProfitLoss ? (
+                  <tr><td colSpan={4} className="text-center py-4">Memuat data...</td></tr>
+                ) : profitLossData.length === 0 ? (
+                  <tr><td colSpan={4} className="text-center py-4">Tidak ada data</td></tr>
+                ) : (
+                  profitLossData.map((row: any, idx: number) => (
+                    <tr key={idx}>
+                      <td className="font-medium text-slate-700">{row.period}</td>
+                      <td className="text-right text-green-600 font-semibold">Rp {row.income?.toLocaleString('id-ID')}</td>
+                      <td className="text-right text-red-600 font-semibold">Rp {row.expense?.toLocaleString('id-ID')}</td>
+                      <td className="text-right pr-4 font-bold">
+                        <span className={row.netProfit >= 0 ? 'text-green-700' : 'text-red-700'}>
+                          Rp {row.netProfit?.toLocaleString('id-ID')}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+
           {activeTab === 'finance' && (
             <table className={styles.table}>
               <thead>

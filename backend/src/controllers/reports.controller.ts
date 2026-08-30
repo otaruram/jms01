@@ -4,6 +4,16 @@ import { ReportsService } from '../services/reports.service';
 const reportsService = new ReportsService();
 
 export class ReportsController {
+  getProfitLoss = async (req: Request, res: Response) => {
+    try {
+      const months = req.query.months ? parseInt(req.query.months as string) : 3;
+      const data = await reportsService.getProfitLoss(months);
+      res.json({ success: true, data });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
+
   getFinance = async (req: Request, res: Response) => {
     try {
       const data = await reportsService.getFinance();
@@ -33,21 +43,22 @@ export class ReportsController {
 
   exportReport = async (req: Request, res: Response) => {
     try {
-      const type = req.query.type as string; // finance | projects | tax
+      const type = req.query.type as string; // profit-loss | finance | projects | tax
       const format = req.query.format as string; // pdf | excel
+      const months = req.query.months ? parseInt(req.query.months as string) : 3;
 
-      if (!['finance', 'projects', 'tax'].includes(type)) {
+      if (!['profit-loss', 'finance', 'projects', 'tax'].includes(type)) {
         return res.status(400).json({ success: false, message: 'Invalid report type' });
       }
 
       if (format === 'excel') {
-        const workbook = await reportsService.exportExcel(type);
+        const workbook = await reportsService.exportExcel(type, months);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename=report-${type}.xlsx`);
         await workbook.xlsx.write(res);
         res.end();
       } else if (format === 'pdf') {
-        const doc = await reportsService.exportPdf(type);
+        const doc = await reportsService.exportPdf(type, months);
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=report-${type}.pdf`);
         doc.pipe(res);

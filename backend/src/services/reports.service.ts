@@ -3,6 +3,73 @@ import excel from 'exceljs';
 import PDFDocument from 'pdfkit';
 
 export class ReportsService {
+  async getProfitLoss(months: number) {
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+
+    // 1. Get Income (Paid Orders)
+    const orders = await prisma.order.findMany({
+      where: { 
+        status: 'PAID',
+        createdAt: { gte: startDate }
+      },
+      select: { createdAt: true, total: true }
+    });
+
+    // 2. Get Capital (Project Capital)
+    const capitals = await prisma.projectCapital.findMany({
+      where: { createdAt: { gte: startDate } },
+      select: { createdAt: true, amount: true }
+    });
+
+    // 3. Get Expenses
+    const expenses = await prisma.expense.findMany({
+      where: { date: { gte: startDate } },
+      select: { date: true, amount: true }
+    });
+
+    // Group by Month-Year
+    const grouped: Record<string, { income: number, expense: number }> = {};
+    
+    // Initialize months in range to ensure no empty gaps
+    for (let i = 0; i < months; i++) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+      grouped[key] = { income: 0, expense: 0 };
+    }
+
+    orders.forEach(o => {
+      const key = `${o.createdAt.getFullYear()}-${(o.createdAt.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (grouped[key]) grouped[key].income += o.total;
+    });
+
+    capitals.forEach(c => {
+      const key = `${c.createdAt.getFullYear()}-${(c.createdAt.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (grouped[key]) grouped[key].income += c.amount;
+    });
+
+    expenses.forEach(e => {
+      const key = `${e.date.getFullYear()}-${(e.date.getMonth() + 1).toString().padStart(2, '0')}`;
+      if (grouped[key]) grouped[key].expense += e.amount;
+    });
+
+    return Object.entries(grouped)
+      .sort((a, b) => b[0].localeCompare(a[0])) // Descending (latest first)
+      .map(([period, data]) => {
+        const [year, month] = period.split('-');
+        const dateObj = new Date(parseInt(year), parseInt(month) - 1);
+        const periodName = dateObj.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+        
+        return {
+          period: periodName,
+          income: data.income,
+          expense: data.expense,
+          netProfit: data.income - data.expense
+        };
+      });
+  }
+
   async getFinance() {
     const documents = await prisma.documentMaster.findMany({
       orderBy: { createdAt: 'desc' },
@@ -66,11 +133,20 @@ export class ReportsService {
     });
   }
 
-  async exportExcel(type: string): Promise<excel.Workbook> {
+  async exportExcel(type: string, months: number = 3): Promise<excel.Workbook> {
     const workbook = new excel.Workbook();
     const worksheet = workbook.addWorksheet('Report');
 
-    if (type === 'finance') {
+    if (type === 'profit-loss') {
+      worksheet.columns = [
+        { header: 'Periode', key: 'period', width: 25 },
+        { header: 'Total Pemasukan', key: 'income', width: 25 },
+        { header: 'Total Pengeluaran', key: 'expense', width: 25 },
+        { header: 'Laba/Rugi Bersih', key: 'netProfit', width: 25 }
+      ];
+      const data = await this.getProfitLoss(months);
+      worksheet.addRows(data);
+    } else if (type === 'finance') {
       worksheet.columns = [
         { header: 'Tanggal', key: 'date', width: 15 },
         { header: 'Klien', key: 'clientName', width: 30 },
@@ -101,13 +177,18 @@ export class ReportsService {
     return workbook;
   }
 
-  async exportPdf(type: string): Promise<PDFKit.PDFDocument> {
+  async exportPdf(type: string, months: number = 3): Promise<PDFKit.PDFDocument> {
     const doc = new PDFDocument();
     
     doc.fontSize(16).text(`Laporan ${type.toUpperCase()}`, { align: 'center' });
     doc.moveDown();
 
-    if (type === 'finance') {
+    if (type === 'profit-loss') {
+      const data = await this.getProfitLoss(months);
+      data.forEach(row => {
+        doc.fontSize(10).text(`${row.period} - Pemasukan: Rp ${row.income} - Pengeluaran: Rp ${row.expense} - Bersih: Rp ${row.netProfit}`);
+      });
+    } else if (type === 'finance') {
       const data = await this.getFinance();
       data.forEach(row => {
         doc.fontSize(10).text(`${row.date.toLocaleDateString()} - ${row.clientName} - Rp ${row.amount}`);
