@@ -85,12 +85,24 @@ backend/
 │   ├── app.ts                # Express setup, middleware, routing
 │   └── server.ts             # Server bootstrap + graceful shutdown
 │
-├── .env                      # Aktif (lokal/prod tergantung deployment)
-├── .env.local                # Kredensial database lokal (development)
-├── .env.production           # Kredensial database produksi
+├── .env                      # Kredensial database lokal (development) & variabel environment default
+├── .env.production           # Kredensial database produksi (Vercel & Supabase Prod)
 ├── Dockerfile                # Multi-stage build (builder → production)
 └── docker-compose.yml        # Orchestration
 ```
+
+### 2.1 Hierarki Environment Variables (.env)
+Sistem menggunakan dua file environment utama untuk memisahkan konfigurasi lokal dan produksi, sehingga mencegah modifikasi atau kebocoran data produksi saat masa *development*.
+
+1. **`.env` (Lokal / Development)**
+   - **Fungsi:** Mengatur variabel yang digunakan saat menjalankan server lokal (`npm run dev`).
+   - **Database:** Terhubung ke instance database *development* atau staging Supabase.
+   - **Penggunaan:** Modifikasi kode, eksperimen fitur baru, dan pengujian API menggunakan Postman.
+
+2. **`.env.production` (Produksi / Vercel)**
+   - **Fungsi:** Mengatur kredensial aman yang hanya digunakan oleh *build system* Vercel saat deployment final.
+   - **Database:** Terhubung ke instance database *Production* (URL Supabase yang sesungguhnya).
+   - **Penggunaan:** Prisma Push untuk sinkronisasi skema tabel nyata, dan *live hosting* di cloud (URL Vercel).
 
 ---
 
@@ -268,3 +280,11 @@ Bast (standalone, indexed by clientId + projectId)
 - **Sinkronisasi Environment**: Menambahkan seeder pada `prisma/seed.ts` yang memastikan `okitr52@gmail.com` secara absolut dan permanen diregistrasikan dengan Role `SUPER_ADMIN`.
 - **Arsitektur Global Layout UI/UX**: Melakukan perombakan total pada hierarki HTML `DashboardLayout.tsx` dan `Sidebar.tsx`. Diimplementasikan secara strict struktur class Tailwind dengan kontainer `w-64 h-full bg-white` untuk Sidebar dan pembungkus `pt-12 px-10 pb-12 w-full max-w-7xl mx-auto` untuk konten utama agar memberikan layout yang berkelas dan konsisten.
 - **E2E Logic**: Konfirmasi integritas halaman dashboard dengan request API *live*, sinkronisasi RBAC di semua halaman, dan pengamanan halaman Pengaturan Sistem (Super Admin) di layer React.
+
+### [2026-08-30] — UI/UX Standardization & Expense Feature
+- **Fitur Pengeluaran (Expense)**: Implementasi *end-to-end* untuk pencatatan pengeluaran operasional per proyek. Terdiri dari *Backend* (Prisma Schema, Repository, Service, Controller, Routes) yang sepenuhnya menerapkan *Separation of Concerns* (anti-spaghetti), dan *Frontend* (ExpensesPage dengan form *SlideOver* serta perhitungan otomatis).
+- **Komponen AlertModal (Glassmorphism)**: Penghapusan total pemanggilan `window.confirm()` bawaan peramban pada fitur *delete* permanen. Digantikan oleh `AlertModal.tsx` terpusat yang *reusable* dan modern untuk menjamin *Clean Code* di seluruh komponen halaman.
+- **Standarisasi Pagination & Search**: Refactoring *state management* pencarian dan batasan tampilan *history* (maksimal 10 data) pada fitur SPH, BAST, Dokumen (Kwitansi/Surat Jalan), Proyek, Inventaris, dan Pesanan.
+- **Responsivitas Ekstrem (Mobile Friendly)**: Penambahan global `overflow-x-auto` pada semua tabel historis untuk mendukung *horizontal scroll* dari perangkat sentuh (*mobile*).
+- **Toast Notifications System**: Mengganti notifikasi *alert* standar sistem (terutama di pengaturan *role* akun) dengan *Toast* kustom yang muncul elegan.
+- **Sinkronisasi Environment**: Fix koneksi *pooling* Prisma ke Supabase Prod via `.env.production` (dengan port *session* 5432) dan penyelesaian integrasi migrasi DB.

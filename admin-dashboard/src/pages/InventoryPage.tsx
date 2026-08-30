@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { SlideOver } from '../components/ui/SlideOver';
 import { Pagination } from '../components/ui/Pagination';
-import { Plus, Search, Filter, ArrowDownToLine, Trash2 } from 'lucide-react';
+import { Plus, Search, Filter, ArrowDownToLine, Trash2, PackagePlus } from 'lucide-react';
 import { AlertModal } from '../components/ui/AlertModal';
 import { inventoryApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -31,10 +31,22 @@ export function InventoryPage() {
   const { toast } = useToast();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  // Form states
+  // Form states (Install)
   const [projectId, setProjectId] = useState('');
   const [productId, setProductId] = useState('');
   const [qty, setQty] = useState('');
+
+  // Form states (Add Stock)
+  const [isAddStockOpen, setIsAddStockOpen] = useState(false);
+  const [addStockId, setAddStockId] = useState('');
+  const [addStockQty, setAddStockQty] = useState('');
+
+  // Form states (Create Product)
+  const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
+  const [newProductName, setNewProductName] = useState('');
+  const [newProductCategory, setNewProductCategory] = useState('');
+  const [newProductStock, setNewProductStock] = useState('');
+  const [newProductUnit, setNewProductUnit] = useState('Pcs');
 
   const { data: inventoryResponse, isLoading } = useQuery({
     queryKey: ['inventory'],
@@ -76,6 +88,36 @@ export function InventoryPage() {
     setDeleteTarget(id);
   };
 
+  const createProductMutation = useMutation({
+    mutationFn: (data: { name: string; category: string; stock: number; unit: string }) => 
+      inventoryApi.createProduct(data),
+    onSuccess: () => {
+      toast('Barang baru berhasil ditambahkan!', 'success');
+      setIsCreateProductOpen(false);
+      setNewProductName('');
+      setNewProductCategory('');
+      setNewProductStock('');
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal menambahkan barang: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
+  const addStockMutation = useMutation({
+    mutationFn: (data: { id: string; qty: number }) => 
+      inventoryApi.addStock(data.id, data.qty),
+    onSuccess: () => {
+      toast('Stok berhasil ditambahkan!', 'success');
+      setIsAddStockOpen(false);
+      setAddStockQty('');
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal menambahkan stok: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
   const inventoryData = inventoryResponse?.data || [];
   
   // Filter based on search (Mock pagination for now as API might not support it yet, 
@@ -92,8 +134,24 @@ export function InventoryPage() {
   const handleInstallSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!projectId || !productId || !qty) return toast('Mohon lengkapi data', 'error');
-    
     installMutation.mutate({ productId, projectId, qty: parseInt(qty) });
+  };
+
+  const handleCreateProductSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProductName || !newProductCategory || !newProductStock || !newProductUnit) return toast('Mohon lengkapi data', 'error');
+    createProductMutation.mutate({ 
+      name: newProductName, 
+      category: newProductCategory, 
+      stock: parseInt(newProductStock), 
+      unit: newProductUnit 
+    });
+  };
+
+  const handleAddStockSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addStockId || !addStockQty) return toast('Mohon lengkapi data', 'error');
+    addStockMutation.mutate({ id: addStockId, qty: parseInt(addStockQty) });
   };
 
   return (
@@ -108,9 +166,14 @@ export function InventoryPage() {
             <ArrowDownToLine size={16} /> Export
           </Button>
           {!isReadOnly && (
-            <Button onClick={() => setIsSlideOverOpen(true)} className={styles.actionBtn}>
-              <Plus size={16} /> Pemasangan Barang
-            </Button>
+            <>
+              <Button variant="outline" onClick={() => setIsCreateProductOpen(true)} className={styles.actionBtn}>
+                <Plus size={16} /> Tambah Barang
+              </Button>
+              <Button onClick={() => setIsSlideOverOpen(true)} className={styles.actionBtn}>
+                <PackagePlus size={16} /> Pemasangan
+              </Button>
+            </>
           )}
         </div>
       </header>
@@ -171,6 +234,12 @@ export function InventoryPage() {
                     </td>
                     <td className={styles.textRight}>
                       <div className="flex justify-end gap-2 items-center">
+                        {!isReadOnly && (
+                          <Button variant="outline" size="sm" onClick={() => {
+                            setAddStockId(item.id);
+                            setIsAddStockOpen(true);
+                          }}>+ Stok</Button>
+                        )}
                         <Button variant="ghost" size="sm" onClick={() => setDetailProduct(item)}>Detail</Button>
                         {!isReadOnly && (
                           <button 
@@ -257,6 +326,84 @@ export function InventoryPage() {
             </Button>
             <Button type="submit" disabled={installMutation.isPending}>
               {installMutation.isPending ? 'Memproses...' : 'Buat & Potong Stok'}
+            </Button>
+          </div>
+        </form>
+      </SlideOver>
+
+      {/* Create Product Form */}
+      <SlideOver 
+        isOpen={isCreateProductOpen} 
+        onClose={() => setIsCreateProductOpen(false)} 
+        title="Tambah Barang Baru"
+      >
+        <form className={styles.form} onSubmit={handleCreateProductSubmit}>
+          <Input 
+            label="Nama Barang" 
+            placeholder="Masukkan nama barang..." 
+            value={newProductName}
+            onChange={(e) => setNewProductName(e.target.value)}
+            required
+          />
+          <Input 
+            label="Kategori" 
+            placeholder="Contoh: Kamera, Kabel, Aksesoris" 
+            value={newProductCategory}
+            onChange={(e) => setNewProductCategory(e.target.value)}
+            required
+          />
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Input 
+                label="Stok Awal" 
+                type="number" 
+                placeholder="Jumlah" 
+                value={newProductStock}
+                onChange={(e) => setNewProductStock(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <Input 
+                label="Satuan" 
+                placeholder="cth: Pcs, Roll, Meter" 
+                value={newProductUnit}
+                onChange={(e) => setNewProductUnit(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <div className={styles.formActions}>
+            <Button variant="outline" type="button" onClick={() => setIsCreateProductOpen(false)}>Batal</Button>
+            <Button type="submit" disabled={createProductMutation.isPending}>
+              {createProductMutation.isPending ? 'Memproses...' : 'Simpan Barang'}
+            </Button>
+          </div>
+        </form>
+      </SlideOver>
+
+      {/* Add Stock Form */}
+      <SlideOver 
+        isOpen={isAddStockOpen} 
+        onClose={() => setIsAddStockOpen(false)} 
+        title="Tambah Stok Barang"
+      >
+        <form className={styles.form} onSubmit={handleAddStockSubmit}>
+          <div className={styles.formInfo}>
+            Menambah stok untuk ID Barang: <strong>{addStockId}</strong>
+          </div>
+          <Input 
+            label="Jumlah Stok Tambahan" 
+            type="number" 
+            placeholder="Masukkan jumlah yang ditambahkan" 
+            value={addStockQty}
+            onChange={(e) => setAddStockQty(e.target.value)}
+            required
+          />
+          <div className={styles.formActions}>
+            <Button variant="outline" type="button" onClick={() => setIsAddStockOpen(false)}>Batal</Button>
+            <Button type="submit" disabled={addStockMutation.isPending}>
+              {addStockMutation.isPending ? 'Memproses...' : 'Tambah Stok'}
             </Button>
           </div>
         </form>

@@ -39,6 +39,9 @@ api.interceptors.response.use(
 
 export const inventoryApi = {
   getInventory: () => api.get('/inventory'),
+  createProduct: (data: { name: string; category: string; stock: number; unit: string; status?: string }) => 
+    api.post('/inventory', data),
+  addStock: (id: string, qty: number) => api.post(`/inventory/${id}/stock`, { qty }),
   installProduct: (productId: string, projectId: string, qty: number) => 
     api.post('/inventory/install', { productId, projectId, qty }),
   deleteProduct: (id: string) => api.delete(`/inventory/${id}`),

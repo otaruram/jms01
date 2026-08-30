@@ -21,6 +21,40 @@ export class InventoryRepository {
     return { data, total };
   }
 
+  async create(data: { name: string; category: string; stock: number; unit: string; status?: string }) {
+    let status = data.status;
+    if (!status) {
+      if (data.stock === 0) status = 'Habis';
+      else if (data.stock <= 5) status = 'Kritis';
+      else status = 'Aman';
+    }
+    return await prisma.product.create({
+      data: { ...data, status: status as string },
+    });
+  }
+
+  async addStock(id: string, qty: number) {
+    return await prisma.$transaction(async (tx) => {
+      const updated = await tx.product.update({
+        where: { id },
+        data: { stock: { increment: qty } }
+      });
+      
+      let newStatus = updated.status;
+      if (updated.stock === 0) newStatus = 'Habis';
+      else if (updated.stock <= 5) newStatus = 'Kritis';
+      else newStatus = 'Aman';
+
+      if (newStatus !== updated.status) {
+        return await tx.product.update({
+          where: { id },
+          data: { status: newStatus }
+        });
+      }
+      return updated;
+    });
+  }
+
   async findById(id: string) {
     return await prisma.product.findUnique({
       where: { id },

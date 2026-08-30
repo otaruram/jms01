@@ -15,6 +15,27 @@ export class InventoryController {
     }
   };
 
+  createProduct = async (req: Request, res: Response) => {
+    try {
+      const data = req.body;
+      const result = await inventoryService.createProduct(data);
+      res.status(201).json({ success: true, data: result, message: 'Barang berhasil ditambahkan.' });
+    } catch (error: any) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  };
+
+  addStock = async (req: Request, res: Response) => {
+    try {
+      const { qty } = req.body;
+      const id = req.params.id as string;
+      const result = await inventoryService.addStock(id, qty);
+      res.json({ success: true, data: result, message: 'Stok berhasil ditambahkan.' });
+    } catch (error: any) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  };
+
   installProduct = async (req: Request, res: Response) => {
     try {
       // Body already validated by Zod middleware

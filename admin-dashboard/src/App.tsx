@@ -11,6 +11,7 @@ import { SphBastPage } from './pages/SphBastPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SystemSettingsPage } from './pages/SystemSettingsPage';
 import { ExpensesPage } from './pages/ExpensesPage';
+import { PdfToolsPage } from './pages/PdfToolsPage';
 import { LandingPage } from './pages/LandingPage';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -43,6 +44,7 @@ function AppRoutes() {
           <Route path="orders" element={<OrdersPage />} />
           <Route path="sph-bast" element={<SphBastPage />} />
           <Route path="expenses" element={<ExpensesPage />} />
+          <Route path="pdf-tools" element={<PdfToolsPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="system" element={<SystemSettingsPage />} />
         </Route>

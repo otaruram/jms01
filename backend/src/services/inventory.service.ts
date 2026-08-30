@@ -7,6 +7,14 @@ export class InventoryService {
     return await inventoryRepository.findAll(skip, take);
   }
 
+  async createProduct(data: { name: string; category: string; stock: number; unit: string; status?: string }) {
+    return await inventoryRepository.create(data);
+  }
+
+  async addStock(id: string, qty: number) {
+    return await inventoryRepository.addStock(id, qty);
+  }
+
   async installProduct(productId: string, projectId: string, qty: number) {
     // Business Logic: Check if stock is sufficient
     const product = await inventoryRepository.findById(productId);

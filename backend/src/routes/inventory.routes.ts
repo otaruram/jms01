@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { InventoryController } from '../controllers/inventory.controller';
 import { validate } from '../middlewares/validate';
-import { installProductSchema } from '../validators/inventory.validator';
+import { installProductSchema, createProductSchema, addStockSchema } from '../validators/inventory.validator';
 import { roleMiddleware } from '../middlewares/role';
 import { activityLogger } from '../middlewares/activityLogger';
 
@@ -12,6 +12,22 @@ const inventoryController = new InventoryController();
 router.get('/', inventoryController.getInventory);
 
 // Write access is only for SUPER_ADMIN and ADMIN
+router.post(
+  '/',
+  roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
+  activityLogger('Inventaris'),
+  validate(createProductSchema),
+  inventoryController.createProduct
+);
+
+router.post(
+  '/:id/stock',
+  roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
+  activityLogger('Inventaris'),
+  validate(addStockSchema),
+  inventoryController.addStock
+);
+
 router.post(
   '/install',
   roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
