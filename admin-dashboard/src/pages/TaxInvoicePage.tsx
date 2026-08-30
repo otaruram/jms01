@@ -287,6 +287,22 @@ export function TaxInvoicePage() {
           />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-4">
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={() => {
+                setInvoiceNo('010.000-24.98765432');
+                setClientId('CLI-DEMO-01');
+                setProjectId('PRJ-DEMO-01');
+                setDppAmount('10000000');
+                setTaxAmount('1100000');
+                setDate(new Date().toISOString().split('T')[0]);
+                setDescription('Penagihan Termin 1');
+              }}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              Auto Fill (Dev)
+            </Button>
             <Button variant="outline" type="button" onClick={() => setIsSlideOverOpen(false)}>Batal</Button>
             <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending ? 'Menyimpan...' : 'Simpan Faktur'}
