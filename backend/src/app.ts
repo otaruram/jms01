@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import { globalLimiter } from './middlewares/rateLimiter';
 import { authMiddleware } from './middlewares/auth';
 import inventoryRoutes from './routes/inventory.routes';
@@ -18,6 +19,7 @@ const app = express();
 
 // Security Middlewares
 app.use(helmet()); // Secure HTTP headers
+app.use(compression()); // Compress responses with GZIP for performance
 
 const corsOptions = {
   origin: ['http://localhost:5173', 'https://jms-admin-wine.vercel.app', 'https://jms-admin.my.id', 'https://jms-admin.vercel.app'],

@@ -15,6 +15,7 @@ export class ExpenseRepository {
 
   async getAll() {
     return await prisma.expense.findMany({
+      take: 100,
       orderBy: { createdAt: 'desc' },
     });
   }

@@ -34,6 +34,7 @@ export class DocumentRepository {
 
   async getAll() {
     return await prisma.documentMaster.findMany({
+      take: 100,
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
