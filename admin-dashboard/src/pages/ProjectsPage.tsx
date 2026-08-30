@@ -32,6 +32,8 @@ export function ProjectsPage() {
   const [activeTab, setActiveTab] = useState<'barang' | 'akomodasi'>('barang');
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [newProject, setNewProject] = useState({ name: '', clientId: '', totalCapital: '' });
+  const [isCapitalFormOpen, setIsCapitalFormOpen] = useState(false);
+  const [newCapital, setNewCapital] = useState({ type: 'AKOMODASI', amount: '', description: '' });
   const { isReadOnly } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -48,6 +50,26 @@ export function ProjectsPage() {
       toast('Gagal membuat proyek: ' + (error.response?.data?.message || error.message), 'error');
     }
   });
+
+  const addCapitalMutation = useMutation({
+    mutationFn: (data: any) => projectApi.addCapital(data.projectId, data.type, parseFloat(data.amount), data.description),
+    onSuccess: () => {
+      toast('Pengeluaran berhasil dicatat!', 'success');
+      setIsCapitalFormOpen(false);
+      setNewCapital({ type: 'AKOMODASI', amount: '', description: '' });
+      queryClient.invalidateQueries({ queryKey: ['project', selectedProjectId] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal mencatat pengeluaran: ' + (error.response?.data?.message || error.message), 'error');
+    }
+  });
+
+  const handleAddCapital = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProjectId || !newCapital.amount || !newCapital.description) return;
+    addCapitalMutation.mutate({ projectId: selectedProjectId, ...newCapital });
+  };
 
   const updateStatusMutation = useMutation({
     mutationFn: (data: { id: string, status: string }) => projectApi.updateStatus(data.id, data.status),
@@ -296,15 +318,19 @@ export function ProjectsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-xl border border-gray-100 bg-gray-50 flex flex-col gap-1">
                 <span className="text-xs text-gray-500 uppercase font-semibold">Total Modal Keseluruhan</span>
-                <span className="text-lg font-bold text-gray-900">Rp 15.000.000</span>
+                <span className="text-lg font-bold text-gray-900">Rp {(selectedProject.totalCapital || 0).toLocaleString('id-ID')}</span>
               </div>
               <div className="p-4 rounded-xl border border-gray-100 bg-blue-50 flex flex-col gap-1">
                 <span className="text-xs text-blue-500 uppercase font-semibold">Total Modal Barang</span>
-                <span className="text-lg font-bold text-blue-900">Rp 12.500.000</span>
+                <span className="text-lg font-bold text-blue-900">
+                  Rp {(selectedProject.capitals?.filter((c: any) => c.type === 'BARANG').reduce((sum: number, c: any) => sum + c.amount, 0) || 0).toLocaleString('id-ID')}
+                </span>
               </div>
               <div className="p-4 rounded-xl border border-gray-100 bg-orange-50 flex flex-col gap-1">
-                <span className="text-xs text-orange-500 uppercase font-semibold">Total Modal Akomodasi</span>
-                <span className="text-lg font-bold text-orange-900">Rp 2.500.000</span>
+                <span className="text-xs text-orange-500 uppercase font-semibold">Total Modal Akomodasi/Lainnya</span>
+                <span className="text-lg font-bold text-orange-900">
+                  Rp {(selectedProject.capitals?.filter((c: any) => c.type !== 'BARANG').reduce((sum: number, c: any) => sum + c.amount, 0) || 0).toLocaleString('id-ID')}
+                </span>
               </div>
             </div>
 
@@ -325,22 +351,99 @@ export function ProjectsPage() {
               </div>
 
               {activeTab === 'barang' ? (
-                <div className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg text-center">
-                  Belum ada riwayat pemasangan barang untuk proyek ini.
-                </div>
+                selectedProject.installations && selectedProject.installations.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {selectedProject.installations.map((inst: any) => (
+                      <div key={inst.id} className="p-3 border border-gray-100 rounded-lg flex justify-between items-center bg-white">
+                        <div>
+                          <div className="font-medium text-sm text-gray-900">{inst.product?.name}</div>
+                          <div className="text-xs text-gray-500">{new Date(inst.createdAt).toLocaleDateString('id-ID')}</div>
+                        </div>
+                        <div className="font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded text-sm">
+                          {inst.qty} {inst.product?.unit}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg text-center">
+                    Belum ada riwayat pemasangan barang untuk proyek ini.
+                  </div>
+                )
               ) : (
-                <div className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg text-center">
-                  Belum ada riwayat pengeluaran akomodasi untuk proyek ini.
-                </div>
+                selectedProject.capitals && selectedProject.capitals.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {selectedProject.capitals.map((cap: any) => (
+                      <div key={cap.id} className="p-3 border border-gray-100 rounded-lg flex justify-between items-center bg-white">
+                        <div>
+                          <div className="font-medium text-sm text-gray-900">{cap.description}</div>
+                          <div className="text-xs text-gray-500">{new Date(cap.createdAt).toLocaleDateString('id-ID')} • {cap.type}</div>
+                        </div>
+                        <div className="font-bold text-orange-600 text-sm">
+                          Rp {cap.amount.toLocaleString('id-ID')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-lg text-center">
+                    Belum ada riwayat pengeluaran akomodasi untuk proyek ini.
+                  </div>
+                )
               )}
             </div>
 
             <div className="flex justify-end mt-4 pt-4 border-t border-gray-100 gap-2">
               <Button variant="outline" onClick={() => setIsDetailSlideOverOpen(false)}>Tutup</Button>
-              <Button onClick={() => alert('Fitur catat pengeluaran akan segera hadir')}>Catat Pengeluaran Proyek</Button>
+              <Button onClick={() => setIsCapitalFormOpen(true)}>Catat Pengeluaran Proyek</Button>
             </div>
           </div>
         )}
+      </SlideOver>
+
+      <SlideOver 
+        isOpen={isCapitalFormOpen} 
+        onClose={() => setIsCapitalFormOpen(false)} 
+        title="Catat Pengeluaran Proyek"
+      >
+        <form onSubmit={handleAddCapital} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">Tipe Pengeluaran</label>
+            <select 
+              className="w-full p-2 border border-gray-300 rounded-lg bg-white"
+              value={newCapital.type}
+              onChange={(e) => setNewCapital({...newCapital, type: e.target.value})}
+            >
+              <option value="AKOMODASI">Akomodasi (Hotel, Tiket, dll)</option>
+              <option value="LAIN-LAIN">Lain-lain (Konsumsi, Darurat, dll)</option>
+            </select>
+          </div>
+          <Input 
+            label="Nominal (Rp)" 
+            type="number"
+            placeholder="Contoh: 500000"
+            value={newCapital.amount}
+            onChange={(e) => setNewCapital({...newCapital, amount: e.target.value})}
+            required
+          />
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">Deskripsi Singkat</label>
+            <textarea 
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              placeholder="Contoh: Tiket pesawat teknisi"
+              rows={3}
+              value={newCapital.description}
+              onChange={(e) => setNewCapital({...newCapital, description: e.target.value})}
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-2 mt-8">
+            <Button variant="outline" type="button" onClick={() => setIsCapitalFormOpen(false)}>Batal</Button>
+            <Button type="submit" disabled={addCapitalMutation.isPending}>
+              {addCapitalMutation.isPending ? 'Menyimpan...' : 'Simpan Pengeluaran'}
+            </Button>
+          </div>
+        </form>
       </SlideOver>
 
       {/* AlertModal for Delete Confirmation */}
