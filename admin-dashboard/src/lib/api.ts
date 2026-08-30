@@ -37,6 +37,14 @@ api.interceptors.response.use(
   }
 );
 
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
 export const inventoryApi = {
   getInventory: (params?: PaginationParams) => 
     api.get('/inventory', { params }),

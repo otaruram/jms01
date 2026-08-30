@@ -1,20 +1,11 @@
 import { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Shield, Save } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { useToast } from '../components/ui/ToastContext';
+import { User, Mail, Shield } from 'lucide-react';
 
 export function ProfileSettingsPage() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
-  
-  const handleSave = () => {
-    // In a real app, this would call an API to update the profile
-    toast('Profil berhasil diperbarui!', 'success');
-    setIsEditing(false);
-  };
+  const [isEditing] = useState(false);
 
   if (!user) return null;
 
