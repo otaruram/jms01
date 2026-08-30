@@ -45,6 +45,7 @@ body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   min-height: 100vh;
+  overscroll-behavior-y: none; /* Mencegah pull-to-refresh di mobile */
 }
 
 a {

@@ -410,3 +410,60 @@
 :global(.pdf-range) {
   width: 100%;
 }
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  :global(.pdf-tool-layout) {
+    padding: 1.25rem 1rem;
+    border-radius: 0.75rem;
+    margin-inline: 0.5rem;
+  }
+
+  :global(.pdf-tool-title) {
+    font-size: 1.25rem;
+  }
+
+  :global(.pdf-dropzone) {
+    padding: 2rem 1rem;
+  }
+
+  :global(.pdf-position-grid) {
+    grid-template-columns: repeat(3, 1fr); /* Tetap 3 kolom tapi tombol lebih kecil */
+    gap: 0.25rem;
+  }
+
+  :global(.pdf-option-btn) {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+
+  :global(.pdf-option-row) {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  :global(.pdf-tool-actions) {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  :global(.pdf-tool-actions button) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  :global(.pdf-file-item) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  :global(.pdf-file-remove) {
+    align-self: flex-end;
+  }
+}
