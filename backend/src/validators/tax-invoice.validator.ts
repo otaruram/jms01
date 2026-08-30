@@ -3,8 +3,8 @@ import { z } from 'zod';
 export const createTaxInvoiceSchema = z.object({
   body: z.object({
     invoiceNo: z.string().min(1, 'Nomor Faktur tidak boleh kosong'),
-    clientId: z.string().uuid('Client ID tidak valid'),
-    projectId: z.string().uuid('Project ID tidak valid').optional(),
+    clientId: z.string().min(1, 'Client ID tidak boleh kosong'),
+    projectId: z.string().optional(),
     dppAmount: z.number().min(0, 'Nilai DPP tidak valid'),
     taxAmount: z.number().min(0, 'Nilai PPN tidak valid'),
     date: z.string().optional(),

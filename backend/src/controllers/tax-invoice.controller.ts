@@ -23,6 +23,8 @@ export class TaxInvoiceController {
     } catch (error: any) {
       if (error.code === 'P2002') {
         res.status(400).json({ success: false, message: 'Nomor Faktur sudah digunakan' });
+      } else if (error.code === 'P2003') {
+        res.status(400).json({ success: false, message: 'ID Klien atau ID Proyek tidak ditemukan di database' });
       } else {
         res.status(500).json({ success: false, message: error.message });
       }
