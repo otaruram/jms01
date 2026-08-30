@@ -31,6 +31,12 @@ const navGroups = [
     items: [
       { name: 'Pusat Rekapan', path: '/reports', icon: BarChart3 },
     ]
+  },
+  {
+    label: 'UTILITAS',
+    items: [
+      { name: 'PDF Tools', path: '/pdf-tools', icon: FileText },
+    ]
   }
 ];
 
