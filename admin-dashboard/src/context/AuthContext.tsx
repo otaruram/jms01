@@ -104,8 +104,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (mounted) setLoading(true);
+      if (event === 'SIGNED_IN') {
+        // Only show loading screen for initial sign in, not token refresh
+        if (mounted && !user) setLoading(true);
+        fetchUserRole(session);
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Token refreshed in background, just update the role silently without unmounting the app
         fetchUserRole(session);
       } else if (event === 'SIGNED_OUT') {
         if (mounted) {
