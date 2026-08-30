@@ -44,4 +44,11 @@ router.delete(
   inventoryController.deleteProduct
 );
 
+router.delete(
+  '/installations/:id',
+  roleMiddleware(['SUPER_ADMIN', 'ADMIN']),
+  activityLogger('Inventaris'),
+  inventoryController.deleteInstallation
+);
+
 export default router;

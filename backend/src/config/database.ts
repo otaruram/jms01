@@ -32,6 +32,11 @@ export const prisma = basePrisma.$extends({
         ];
 
         if (ctx && modelsWithUser.includes(model)) {
+          // SUPER_ADMIN dapat melihat semua ActivityLog
+          if (model === 'ActivityLog' && ctx.role === 'SUPER_ADMIN') {
+            return query(args);
+          }
+
           const anyArgs = args as any;
           
           if (['findMany', 'findFirst', 'count', 'updateMany', 'deleteMany'].includes(operation)) {

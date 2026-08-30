@@ -66,4 +66,14 @@ export class InventoryController {
       res.status(500).json({ success: false, message: error.message });
     }
   };
+
+  deleteInstallation = async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      await inventoryService.deleteInstallation(id);
+      res.json({ success: true, message: 'Riwayat instalasi berhasil dihapus dan stok dikembalikan' });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  };
 }

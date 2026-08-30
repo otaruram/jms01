@@ -56,6 +56,7 @@ export const inventoryApi = {
   installProduct: (productId: string, projectId: string, qty: number) => 
     api.post('/inventory/install', { productId, projectId, qty }),
   deleteProduct: (id: string) => api.delete(`/inventory/${id}`),
+  deleteInstallation: (id: string) => api.delete(`/inventory/installations/${id}`),
 };
 
 export const projectApi = {

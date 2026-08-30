@@ -37,4 +37,8 @@ export class InventoryService {
   async deleteProduct(id: string) {
     return await inventoryRepository.delete(id);
   }
+
+  async deleteInstallation(id: string) {
+    return await inventoryRepository.deleteInstallation(id);
+  }
 }

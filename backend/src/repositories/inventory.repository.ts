@@ -128,4 +128,27 @@ export class InventoryRepository {
       return await tx.product.delete({ where: { id } });
     });
   }
+
+  async deleteInstallation(id: string) {
+    return await prisma.$transaction(async (tx) => {
+      const installation = await tx.installation.findUnique({
+        where: { id },
+      });
+
+      if (!installation) {
+        throw new Error('Data instalasi tidak ditemukan');
+      }
+
+      // Restore product stock
+      await tx.product.update({
+        where: { id: installation.productId },
+        data: { stock: { increment: installation.qty } },
+      });
+
+      // Delete the installation record
+      return await tx.installation.delete({
+        where: { id },
+      });
+    });
+  }
 }

@@ -38,6 +38,8 @@ export function InventoryPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleteInstallationTarget, setDeleteInstallationTarget] = useState<string | null>(null);
+  const [currentInstallationPage, setCurrentInstallationPage] = useState(1);
 
   // Form states (Install)
   const [projectId, setProjectId] = useState('');
@@ -65,9 +67,9 @@ export function InventoryPage() {
   });
 
   const { data: installationsResponse, isLoading: isLoadingInstallations } = useQuery({
-    queryKey: ['installations'],
+    queryKey: ['installations', currentInstallationPage],
     queryFn: async () => {
-      const res = await inventoryApi.getInstallations();
+      const res = await inventoryApi.getInstallations({ page: currentInstallationPage, limit: 10 });
       return res.data;
     }
   });
@@ -96,6 +98,20 @@ export function InventoryPage() {
     onError: (error: any) => {
       toast('Gagal menghapus barang: ' + (error.response?.data?.message || error.message), 'error');
       setDeleteTarget(null);
+    }
+  });
+
+  const deleteInstallationMutation = useMutation({
+    mutationFn: (id: string) => inventoryApi.deleteInstallation(id),
+    onSuccess: () => {
+      toast('Histori dihapus dan stok dikembalikan!', 'success');
+      setDeleteInstallationTarget(null);
+      queryClient.invalidateQueries({ queryKey: ['installations'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+    onError: (error: any) => {
+      toast('Gagal menghapus histori: ' + (error.response?.data?.message || error.message), 'error');
+      setDeleteInstallationTarget(null);
     }
   });
 
@@ -292,6 +308,7 @@ export function InventoryPage() {
                 <th>Proyek Tujuan</th>
                 <th>Nama Barang</th>
                 <th className="text-right pr-4">Jumlah (Qty)</th>
+                <th className="text-right">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -315,11 +332,27 @@ export function InventoryPage() {
                     <td className="font-medium text-slate-700">{item.project?.name || 'N/A'}</td>
                     <td>{item.product?.name || 'N/A'}</td>
                     <td className="text-right pr-4 font-semibold text-slate-800">{item.qty} {item.product?.unit}</td>
+                    <td className="text-right">
+                      {!isReadOnly && (
+                        <button 
+                          className="p-2 text-red-500 hover:bg-red-50 rounded"
+                          onClick={() => setDeleteInstallationTarget(item.id)}
+                          title="Hapus Histori & Kembalikan Stok"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+          <Pagination 
+            currentPage={currentInstallationPage}
+            totalPages={installationsResponse?.pagination?.totalPages || 1}
+            onPageChange={setCurrentInstallationPage}
+          />
         </div>
       </Card>
 
@@ -503,7 +536,6 @@ export function InventoryPage() {
         )}
       </SlideOver>
 
-      {/* AlertModal for Delete Confirmation */}
       <AlertModal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -511,6 +543,15 @@ export function InventoryPage() {
         title="Hapus Barang Inventaris"
         message="Apakah Anda yakin ingin menghapus barang ini beserta riwayat pemasangannya secara permanen?"
         isLoading={deleteProductMutation.isPending}
+      />
+
+      <AlertModal
+        isOpen={!!deleteInstallationTarget}
+        onClose={() => setDeleteInstallationTarget(null)}
+        onConfirm={() => { if (deleteInstallationTarget) deleteInstallationMutation.mutate(deleteInstallationTarget); }}
+        title="Hapus Histori Pemasangan"
+        message="Apakah Anda yakin ingin menghapus histori ini? Stok barang akan dikembalikan (restored) ke inventaris."
+        isLoading={deleteInstallationMutation.isPending}
       />
     </div>
   );

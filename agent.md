@@ -288,3 +288,10 @@ Bast (standalone, indexed by clientId + projectId)
 - **Responsivitas Ekstrem (Mobile Friendly)**: Penambahan global `overflow-x-auto` pada semua tabel historis untuk mendukung *horizontal scroll* dari perangkat sentuh (*mobile*).
 - **Toast Notifications System**: Mengganti notifikasi *alert* standar sistem (terutama di pengaturan *role* akun) dengan *Toast* kustom yang muncul elegan.
 - **Sinkronisasi Environment**: Fix koneksi *pooling* Prisma ke Supabase Prod via `.env.production` (dengan port *session* 5432) dan penyelesaian integrasi migrasi DB.
+
+### [2026-08-30] — RLS, Data Isolation, & Security
+- **Multi-Tenant RLS (Row Level Security)**: Isolasi ketat pada backend Prisma dimana pengguna hanya dapat melihat dan memodifikasi data milik mereka sendiri. Semua *query* diinjeksi `userId` secara transparan lewat *AsyncLocalStorage*.
+- **Pengecualian SUPER_ADMIN**: Khusus untuk modul `ActivityLog`, akses diperluas dengan me-*bypass* aturan RLS sehingga `SUPER_ADMIN` dapat melakukan *audit* menyeluruh terhadap seluruh aktivitas *user* di sistem (log semua akun bisa terbaca di Pengaturan Sistem).
+- **Faktur Pajak End-to-End**: Penambahan fitur baru `TaxInvoice` (Schema, Repo, Controller, Validate) yang dilengkapi mekanisme *Auto-Fill (Dev)* pintar, input data modular, validasi *UUID bypass*, dan handling `P2003` yang mendetail.
+- **ACID Transaction Restore Stock**: Pembaruan sistem inventaris yang memungkinkan histori instalasi (*Installation History*) dihapus (via API `DELETE /installations/:id`). Proses penghapusan otomatis mengembalikan *(increment)* jumlah stok produk di `Product` ke kondisi semula secara terjamin dengan Prisma `$transaction`.
+- **Security Check (Lulus)**: Pengecekan *repository* untuk menjamin `.env` tidak ter-push (dihalangi ketat oleh `.gitignore`), serta verifikasi bahwa sistem RLS tidak memakan sumber daya eksklusif di backend.
