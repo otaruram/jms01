@@ -31,12 +31,23 @@ export const prisma = basePrisma.$extends({
 
         if (ctx && ctx.role !== 'SUPER_ADMIN' && modelsWithUser.includes(model)) {
           const anyArgs = args as any;
-          if (
-            ['findMany', 'findFirst', 'findUnique', 'count', 'update', 'updateMany', 'delete', 'deleteMany'].includes(
-              operation
-            )
-          ) {
+          
+          if (['findMany', 'findFirst', 'count', 'updateMany', 'deleteMany'].includes(operation)) {
+            // Safe to inject into where
             anyArgs.where = { ...anyArgs.where, userId: ctx.userId };
+          } else if (['update', 'delete', 'findUnique'].includes(operation)) {
+            // Cannot inject userId into where because Prisma requires unique fields.
+            // We must verify ownership first using basePrisma.
+            if (anyArgs.where && anyArgs.where.id) {
+              const record = await (basePrisma as any)[model].findUnique({
+                where: anyArgs.where,
+                select: { userId: true }
+              });
+              
+              if (record && record.userId && record.userId !== ctx.userId) {
+                throw new Error('Akses ditolak: Data ini bukan milik Anda (RLS Violation).');
+              }
+            }
           } else if (['create', 'createMany'].includes(operation)) {
             if (anyArgs.data && !Array.isArray(anyArgs.data)) {
               anyArgs.data = { ...anyArgs.data, userId: ctx.userId };

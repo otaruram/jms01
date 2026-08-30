@@ -90,7 +90,7 @@ export function ProfileSettingsPage() {
               <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
                 {isEditing ? (
                   <>
-                    <Button variant="secondary" onClick={() => setIsEditing(false)}>Batal</Button>
+                    <Button variant="outline" onClick={() => setIsEditing(false)}>Batal</Button>
                     <Button className="flex items-center gap-2" onClick={handleSave}>
                       <Save size={16} /> Simpan Perubahan
                     </Button>
