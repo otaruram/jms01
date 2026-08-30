@@ -4,12 +4,15 @@ import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 import { Activity, Shield, Users } from 'lucide-react';
 import { useToast } from '../components/ui/ToastContext';
+import { Pagination } from '../components/ui/Pagination';
 
 export function SystemSettingsPage() {
   const { isSuperAdmin, user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'users' | 'logs'>('users');
   const [users, setUsers] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
+  const [logPage, setLogPage] = useState(1);
+  const [logTotalPages, setLogTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -23,8 +26,11 @@ export function SystemSettingsPage() {
           const res = await api.get('/system/users');
           if (res.data.success) setUsers(res.data.data);
         } else {
-          const res = await api.get('/system/logs');
-          if (res.data.success) setLogs(res.data.data);
+          const res = await api.get(`/system/logs?page=${logPage}&limit=10`);
+          if (res.data.success) {
+            setLogs(res.data.data);
+            setLogTotalPages(res.data.pagination?.totalPages || 1);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch data', error);
@@ -34,7 +40,7 @@ export function SystemSettingsPage() {
     };
     
     fetchData();
-  }, [activeTab, isSuperAdmin]);
+  }, [activeTab, isSuperAdmin, logPage]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     if (userId === currentUser?.id) {
@@ -165,6 +171,14 @@ export function SystemSettingsPage() {
                 )}
               </tbody>
             </table>
+            
+            {logs.length > 0 && (
+              <Pagination 
+                currentPage={logPage}
+                totalPages={logTotalPages}
+                onPageChange={setLogPage}
+              />
+            )}
           </div>
         )}
       </Card>
