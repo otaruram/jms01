@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../config/database';
+import { prisma, userContext } from '../config/database.js';
 import jwt from 'jsonwebtoken';
 
 export interface AuthenticatedRequest extends Request {
@@ -82,7 +82,10 @@ export const authMiddleware = async (
       name: (decodedPayload.user_metadata as any)?.full_name,
       role: dbUser?.role || (decodedPayload.email === process.env.SUPER_ADMIN_EMAIL ? 'SUPER_ADMIN' : 'USER'),
     };
-    next();
+    
+    userContext.run({ userId: req.user.sub, role: req.user.role || 'USER' }, () => {
+      next();
+    });
   } catch (error: any) {
     console.error("❌ [AUTH ERROR]:", error.name, error.message);
     res.status(401).json({ 
