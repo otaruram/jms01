@@ -58,6 +58,7 @@ model Project {
   client        Client           @relation(fields: [clientId], references: [id])
   capitals      ProjectCapital[]
   installations Installation[]
+  expenses      Expense[]
 
   @@index([clientId])
   @@index([status])
@@ -175,4 +176,18 @@ model ActivityLog {
   @@index([userId])
   @@index([module])
   @@index([createdAt])
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  projectId   String?
+  amount      Float
+  date        DateTime @default(now())
+  description String
+  category    String?  // optional category
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  project     Project? @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
 }

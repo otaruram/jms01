@@ -93,4 +93,11 @@ export const reportsApi = {
     api.get(`/reports/export?type=${type}&format=${format}`, { responseType: 'blob' })
 };
 
+export const expenseApi = {
+  getExpenses: () => api.get('/expenses'),
+  createExpense: (data: { projectId?: string; amount: number; date: string; description: string; category?: string }) =>
+    api.post('/expenses', data),
+  deleteExpense: (id: string) => api.delete(`/expenses/${id}`),
+};
+
 export default api;

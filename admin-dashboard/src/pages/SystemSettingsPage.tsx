@@ -3,6 +3,7 @@ import { Card } from '../components/ui/Card';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 import { Activity, Shield, Users } from 'lucide-react';
+import { useToast } from '../components/ui/ToastContext';
 
 export function SystemSettingsPage() {
   const { isSuperAdmin, user: currentUser } = useAuth();
@@ -10,6 +11,7 @@ export function SystemSettingsPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!isSuperAdmin) return;
@@ -36,7 +38,7 @@ export function SystemSettingsPage() {
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     if (userId === currentUser?.id) {
-      alert('Anda tidak bisa mengubah role Anda sendiri!');
+      toast('Anda tidak bisa mengubah role Anda sendiri!', 'error');
       return;
     }
 
@@ -44,9 +46,9 @@ export function SystemSettingsPage() {
       await api.patch(`/system/users/${userId}/role`, { role: newRole });
       
       setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-      alert('Role berhasil diperbarui!');
+      toast('Role berhasil diperbarui!', 'success');
     } catch (error) {
-      alert('Gagal memperbarui role');
+      toast('Gagal memperbarui role', 'error');
     }
   };
 

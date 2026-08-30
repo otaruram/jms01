@@ -11,6 +11,7 @@ import { SlideOver } from '../components/ui/SlideOver';
 import { Input } from '../components/ui/Input';
 import { useToast } from '../components/ui/ToastContext';
 import { Trash2 } from 'lucide-react';
+import { AlertModal } from '../components/ui/AlertModal';
 import styles from './ProjectsPage.module.css';
 
 interface Project {
@@ -29,6 +30,7 @@ export function ProjectsPage() {
   const [isDetailSlideOverOpen, setIsDetailSlideOverOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'barang' | 'akomodasi'>('barang');
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [newProject, setNewProject] = useState({ name: '', clientId: '', totalCapital: '' });
   const { isReadOnly } = useAuth();
   const queryClient = useQueryClient();
@@ -62,11 +64,13 @@ export function ProjectsPage() {
     mutationFn: (id: string) => projectApi.deleteProject(id),
     onSuccess: () => {
       toast('Proyek berhasil dihapus permanen!', 'success');
+      setDeleteTarget(null);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       if (isDetailSlideOverOpen) setIsDetailSlideOverOpen(false);
     },
     onError: (error: any) => {
       toast('Gagal menghapus proyek: ' + (error.response?.data?.message || error.message), 'error');
+      setDeleteTarget(null);
     }
   });
 
@@ -94,9 +98,7 @@ export function ProjectsPage() {
 
   const handleDeleteProject = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Apakah Anda yakin ingin menghapus proyek ini secara permanen?')) {
-      deleteProjectMutation.mutate(id);
-    }
+    setDeleteTarget(id);
   };
 
   const handleOpenDetail = (id: string, e: React.MouseEvent) => {
@@ -340,6 +342,16 @@ export function ProjectsPage() {
           </div>
         )}
       </SlideOver>
+
+      {/* AlertModal for Delete Confirmation */}
+      <AlertModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) deleteProjectMutation.mutate(deleteTarget); }}
+        title="Hapus Proyek"
+        message="Apakah Anda yakin ingin menghapus proyek ini secara permanen?"
+        isLoading={deleteProjectMutation.isPending}
+      />
     </div>
   );
 }

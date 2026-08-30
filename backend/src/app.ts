@@ -12,6 +12,7 @@ import sphBastRoutes from './routes/sph-bast.routes';
 import systemRoutes from './routes/system.routes';
 import authRoutes from './routes/auth.routes';
 import reportsRoutes from './routes/reports.routes';
+import expenseRoutes from './routes/expense.routes';
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api', sphBastRoutes); // /api/sph and /api/bast
 app.use('/api/system', systemRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 // 404 Handler
 app.use((req, res, next) => {

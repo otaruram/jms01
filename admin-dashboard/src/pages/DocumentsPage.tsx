@@ -3,7 +3,9 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { SlideOver } from '../components/ui/SlideOver';
-import { Printer, FileText, Plus, Trash2 } from 'lucide-react';
+import { Pagination } from '../components/ui/Pagination';
+import { AlertModal } from '../components/ui/AlertModal';
+import { Printer, FileText, Plus, Trash2, Search } from 'lucide-react';
 import { documentApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -27,7 +29,11 @@ export function DocumentsPage() {
   const [docItems, setDocItems] = useState<{name: string, qty: number, price: number}[]>([{name: '', qty: 1, price: 0}]);
   const { isReadOnly } = useAuth();
   const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   const queryClient = useQueryClient();
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const { data: documentHistory, isLoading: isLoadingHistory } = useQuery({
     queryKey: ['documents'],
@@ -52,19 +58,14 @@ export function DocumentsPage() {
     mutationFn: (id: string) => documentApi.deleteDocument(id),
     onSuccess: () => {
       toast('Dokumen berhasil dihapus permanen!', 'success');
+      setDeleteTarget(null);
       queryClient.invalidateQueries({ queryKey: ['documents'] });
     },
     onError: (error: any) => {
       toast('Gagal menghapus dokumen: ' + (error.response?.data?.message || error.message), 'error');
+      setDeleteTarget(null);
     }
   });
-
-  const handleDelete = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm('Apakah Anda yakin ingin menghapus dokumen ini beserta kwitansi dan surat jalannya secara permanen?')) {
-      deleteDocMutation.mutate(id);
-    }
-  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +92,15 @@ export function DocumentsPage() {
       items: itemsToPass
     });
   };
+
+  // Compute filtered + paginated data
+  const allDocs = documentHistory || [];
+  const filtered = allDocs.filter((doc: any) =>
+    doc.clientId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.projectId.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className={styles.container}>
@@ -207,7 +217,25 @@ export function DocumentsPage() {
 
           {activeTab === 'history' && (
             <Card title="Riwayat Dokumen Pintar">
-              <div className="overflow-x-auto mt-4 w-full">
+              <div className="flex items-center gap-4 mb-4 flex-wrap">
+                <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+                  <Search size={18} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+                  <input
+                    type="text"
+                    placeholder="Cari berdasarkan klien atau proyek..."
+                    value={searchTerm}
+                    onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem 0.5rem 2.25rem',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '6px',
+                      fontSize: '0.875rem',
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="overflow-x-auto mt-2 w-full">
                 <table className="w-full min-w-[800px] text-left text-sm border-collapse">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
@@ -221,8 +249,8 @@ export function DocumentsPage() {
                   <tbody>
                     {isLoadingHistory ? (
                       <tr><td colSpan={5} className="p-4 text-center text-gray-500">Memuat riwayat dokumen...</td></tr>
-                    ) : documentHistory?.length > 0 ? (
-                      documentHistory.map((doc: any) => (
+                    ) : paginated.length > 0 ? (
+                      paginated.map((doc: any) => (
                         <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50">
                           <td className="p-3 font-mono text-xs text-gray-500">{doc.id}</td>
                           <td className="p-3">
@@ -269,7 +297,7 @@ export function DocumentsPage() {
                             {!isReadOnly && (
                               <button 
                                 className="p-2 text-red-500 hover:bg-red-50 rounded"
-                                onClick={(e) => handleDelete(doc.id, e)}
+                                onClick={() => setDeleteTarget(doc.id)}
                                 title="Hapus Dokumen"
                               >
                                 <Trash2 size={16} />
@@ -279,11 +307,18 @@ export function DocumentsPage() {
                         </tr>
                       ))
                     ) : (
-                      <tr><td colSpan={5} className="p-4 text-center text-gray-500">Belum ada dokumen yang di-generate</td></tr>
+                      <tr><td colSpan={5} className="p-4 text-center text-gray-500">
+                        {searchTerm ? 'Tidak ada data yang cocok.' : 'Belum ada dokumen yang di-generate'}
+                      </td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </Card>
           )}
 
@@ -480,6 +515,16 @@ export function DocumentsPage() {
           </div>
         </form>
       </SlideOver>
+
+      {/* AlertModal for Delete Confirmation */}
+      <AlertModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) deleteDocMutation.mutate(deleteTarget); }}
+        title="Hapus Dokumen"
+        message="Dokumen ini beserta kwitansi dan surat jalannya akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan."
+        isLoading={deleteDocMutation.isPending}
+      />
     </div>
   );
 }

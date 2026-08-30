@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Box, Briefcase, FileText, ShoppingCart, FileCheck, BarChart3, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, Box, Briefcase, FileText, ShoppingCart, FileCheck, BarChart3, LogOut, Settings, Wallet } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -16,6 +16,7 @@ const navGroups = [
       { name: 'Inventaris', path: '/inventory', icon: Box },
       { name: 'Proyek', path: '/projects', icon: Briefcase },
       { name: 'Pesanan', path: '/orders', icon: ShoppingCart },
+      { name: 'Pengeluaran', path: '/expenses', icon: Wallet },
     ]
   },
   {
@@ -37,7 +38,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-export function Sidebar({}: SidebarProps) {
+export function Sidebar(_props: SidebarProps) {
   const navigate = useNavigate();
   const { isSuperAdmin } = useAuth();
 

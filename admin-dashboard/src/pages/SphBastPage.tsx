@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Download, FileCheck, FileSignature, Printer, Trash2 } from 'lucide-react';
+import { Pagination } from '../components/ui/Pagination';
+import { AlertModal } from '../components/ui/AlertModal';
+import { Download, FileCheck, FileSignature, Printer, Trash2, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { sphBastApi } from '../lib/api';
@@ -15,6 +17,14 @@ export function SphBastPage() {
   const { isReadOnly } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Search & Pagination
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // Delete confirmation
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; type: 'sph' | 'bast' } | null>(null);
 
   // SPH form state (matches backend: clientId, projectId, subject, totalAmount, items)
   const [sphData, setSphData] = useState({
@@ -66,10 +76,12 @@ export function SphBastPage() {
     mutationFn: (id: string) => sphBastApi.deleteSph(id),
     onSuccess: () => {
       toast('SPH berhasil dihapus permanen!', 'success');
+      setDeleteTarget(null);
       queryClient.invalidateQueries({ queryKey: ['sph'] });
     },
     onError: (error: any) => {
       toast('Gagal menghapus SPH: ' + (error.response?.data?.message || error.message), 'error');
+      setDeleteTarget(null);
     }
   });
 
@@ -77,26 +89,14 @@ export function SphBastPage() {
     mutationFn: (id: string) => sphBastApi.deleteBast(id),
     onSuccess: () => {
       toast('BAST berhasil dihapus permanen!', 'success');
+      setDeleteTarget(null);
       queryClient.invalidateQueries({ queryKey: ['bast'] });
     },
     onError: (error: any) => {
       toast('Gagal menghapus BAST: ' + (error.response?.data?.message || error.message), 'error');
+      setDeleteTarget(null);
     }
   });
-
-  const handleDeleteSph = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm('Apakah Anda yakin ingin menghapus SPH ini secara permanen?')) {
-      deleteSphMutation.mutate(id);
-    }
-  };
-
-  const handleDeleteBast = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm('Apakah Anda yakin ingin menghapus BAST ini secara permanen?')) {
-      deleteBastMutation.mutate(id);
-    }
-  };
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,6 +124,17 @@ export function SphBastPage() {
 
   const isPending = activeForm === 'sph' ? sphMutation.isPending : bastMutation.isPending;
 
+  // Filter + paginate history
+  const currentHistory = activeForm === 'sph' ? (sphHistory || []) : (bastHistory || []);
+  const filteredHistory = currentHistory.filter((doc: any) =>
+    doc.clientId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    doc.projectId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (doc.subject || doc.description || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const totalPages = Math.ceil(filteredHistory.length / pageSize) || 1;
+  const paginatedHistory = filteredHistory.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const isLoadingHistory = activeForm === 'sph' ? isLoadingSph : isLoadingBast;
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -146,7 +157,7 @@ export function SphBastPage() {
       <div className={styles.actionGrid}>
         <Card 
           className={`${styles.actionCard} ${activeForm === 'sph' ? styles.activeCard : ''}`}
-          onClick={() => setActiveForm('sph')}
+          onClick={() => { setActiveForm('sph'); setCurrentPage(1); setSearchTerm(''); }}
         >
           <div className={styles.actionIconWrapper}>
             <FileCheck size={24} className={activeForm === 'sph' ? styles.iconActive : ''} />
@@ -159,7 +170,7 @@ export function SphBastPage() {
 
         <Card 
           className={`${styles.actionCard} ${activeForm === 'bast' ? styles.activeCard : ''}`}
-          onClick={() => setActiveForm('bast')}
+          onClick={() => { setActiveForm('bast'); setCurrentPage(1); setSearchTerm(''); }}
         >
           <div className={styles.actionIconWrapper}>
             <FileSignature size={24} className={activeForm === 'bast' ? styles.iconActive : ''} />
@@ -285,9 +296,28 @@ export function SphBastPage() {
         </form>
       </Card>
 
-      {/* Tampilan Riwayat */}
+      {/* Tampilan Riwayat with Search & Pagination */}
       <Card title={`Riwayat ${activeForm === 'sph' ? 'SPH' : 'BAST'}`}>
-        <div className="overflow-x-auto mt-4 w-full">
+        <div className="flex items-center gap-4 mb-4 flex-wrap">
+          <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+            <input
+              type="text"
+              placeholder={`Cari riwayat ${activeForm.toUpperCase()}...`}
+              value={searchTerm}
+              onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              style={{
+                width: '100%',
+                padding: '0.5rem 0.75rem 0.5rem 2.25rem',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto mt-2 w-full">
           <table className="w-full min-w-[700px] text-left text-sm border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
@@ -299,80 +329,74 @@ export function SphBastPage() {
               </tr>
             </thead>
             <tbody>
-              {activeForm === 'sph' ? (
-                isLoadingSph ? (
-                  <tr><td colSpan={5} className="p-4 text-center text-gray-500">Memuat riwayat SPH...</td></tr>
-                ) : sphHistory?.length > 0 ? (
-                  sphHistory.map((doc: any) => (
-                    <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-3 font-mono text-xs text-gray-500">{doc.id}</td>
-                      <td className="p-3">
-                        <div className="font-medium text-gray-900">{doc.clientId}</div>
-                        <div className="text-xs text-gray-500">{doc.projectId}</div>
-                      </td>
-                      <td className="p-3 text-gray-600">
-                        {new Date(doc.createdAt).toLocaleDateString('id-ID')}
-                      </td>
+              {isLoadingHistory ? (
+                <tr><td colSpan={activeForm === 'sph' ? 5 : 4} className="p-4 text-center text-gray-500">
+                  Memuat riwayat {activeForm.toUpperCase()}...
+                </td></tr>
+              ) : paginatedHistory.length > 0 ? (
+                paginatedHistory.map((doc: any) => (
+                  <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="p-3 font-mono text-xs text-gray-500">{doc.id}</td>
+                    <td className="p-3">
+                      <div className="font-medium text-gray-900">{doc.clientId}</div>
+                      <div className="text-xs text-gray-500">{doc.projectId}</div>
+                    </td>
+                    <td className="p-3 text-gray-600">
+                      {new Date(doc.createdAt).toLocaleDateString('id-ID')}
+                    </td>
+                    {activeForm === 'sph' && (
                       <td className="p-3 font-medium text-gray-900">
                         Rp {doc.totalAmount?.toLocaleString('id-ID')}
                       </td>
-                      <td className="p-3 text-right">
-                        <div className="flex justify-end gap-2 items-center">
-                          <Button variant="ghost" size="sm">Cetak</Button>
-                          {!isReadOnly && (
-                            <button 
-                              className="p-2 text-red-500 hover:bg-red-50 rounded"
-                              onClick={(e) => handleDeleteSph(doc.id, e)}
-                              title="Hapus SPH"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan={5} className="p-4 text-center text-gray-500">Belum ada SPH</td></tr>
-                )
+                    )}
+                    <td className="p-3 text-right">
+                      <div className="flex justify-end gap-2 items-center">
+                        <Button variant="ghost" size="sm">Cetak</Button>
+                        {!isReadOnly && (
+                          <button 
+                            className="p-2 text-red-500 hover:bg-red-50 rounded"
+                            onClick={() => setDeleteTarget({ id: doc.id, type: activeForm })}
+                            title={`Hapus ${activeForm.toUpperCase()}`}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
               ) : (
-                isLoadingBast ? (
-                  <tr><td colSpan={4} className="p-4 text-center text-gray-500">Memuat riwayat BAST...</td></tr>
-                ) : bastHistory?.length > 0 ? (
-                  bastHistory.map((doc: any) => (
-                    <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-3 font-mono text-xs text-gray-500">{doc.id}</td>
-                      <td className="p-3">
-                        <div className="font-medium text-gray-900">{doc.clientId}</div>
-                        <div className="text-xs text-gray-500">{doc.projectId}</div>
-                      </td>
-                      <td className="p-3 text-gray-600">
-                        {new Date(doc.createdAt).toLocaleDateString('id-ID')}
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className="flex justify-end gap-2 items-center">
-                          <Button variant="ghost" size="sm">Cetak</Button>
-                          {!isReadOnly && (
-                            <button 
-                              className="p-2 text-red-500 hover:bg-red-50 rounded"
-                              onClick={(e) => handleDeleteBast(doc.id, e)}
-                              title="Hapus BAST"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan={4} className="p-4 text-center text-gray-500">Belum ada BAST</td></tr>
-                )
+                <tr><td colSpan={activeForm === 'sph' ? 5 : 4} className="p-4 text-center text-gray-500">
+                  {searchTerm ? 'Tidak ada hasil yang cocok.' : `Belum ada ${activeForm.toUpperCase()}`}
+                </td></tr>
               )}
             </tbody>
           </table>
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </Card>
+
+      {/* AlertModal for Delete Confirmation */}
+      <AlertModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            if (deleteTarget.type === 'sph') {
+              deleteSphMutation.mutate(deleteTarget.id);
+            } else {
+              deleteBastMutation.mutate(deleteTarget.id);
+            }
+          }
+        }}
+        title={`Hapus ${deleteTarget?.type === 'sph' ? 'SPH' : 'BAST'}`}
+        message={`Dokumen ${deleteTarget?.type?.toUpperCase() || ''} ini akan dihapus secara permanen dan tidak dapat dikembalikan. Lanjutkan?`}
+        isLoading={deleteSphMutation.isPending || deleteBastMutation.isPending}
+      />
     </div>
   );
 }

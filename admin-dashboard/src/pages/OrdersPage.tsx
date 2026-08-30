@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Pagination } from '../components/ui/Pagination';
 import { Search, Filter, Trash2 } from 'lucide-react';
+import { AlertModal } from '../components/ui/AlertModal';
 import { useAuth } from '../context/AuthContext';
 import { orderApi } from '../lib/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -28,6 +29,7 @@ export function OrdersPage() {
   const { isReadOnly } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const createOrderMutation = useMutation({
     mutationFn: (data: any) => orderApi.createOrder(data.clientId, parseFloat(data.total)),
@@ -72,6 +74,7 @@ export function OrdersPage() {
     mutationFn: (id: string) => orderApi.deleteOrder(id),
     onSuccess: () => {
       toast('Pesanan berhasil dihapus permanen!', 'success');
+      setDeleteTarget(null);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },
     onError: (error: any) => {
@@ -81,9 +84,7 @@ export function OrdersPage() {
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Apakah Anda yakin ingin menghapus pesanan ini secara permanen?')) {
-      deleteOrderMutation.mutate(id);
-    }
+    setDeleteTarget(id);
   };
 
   const orders = response?.data || [];
@@ -245,6 +246,15 @@ export function OrdersPage() {
           </div>
         </form>
       </SlideOver>
+
+      <AlertModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) deleteOrderMutation.mutate(deleteTarget); }}
+        title="Hapus Pesanan"
+        message="Pesanan ini akan dihapus secara permanen dan tidak dapat dikembalikan. Lanjutkan?"
+        isLoading={deleteOrderMutation.isPending}
+      />
     </div>
   );
 }

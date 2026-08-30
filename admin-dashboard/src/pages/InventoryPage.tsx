@@ -5,6 +5,7 @@ import { Input } from '../components/ui/Input';
 import { SlideOver } from '../components/ui/SlideOver';
 import { Pagination } from '../components/ui/Pagination';
 import { Plus, Search, Filter, ArrowDownToLine, Trash2 } from 'lucide-react';
+import { AlertModal } from '../components/ui/AlertModal';
 import { inventoryApi } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -28,6 +29,7 @@ export function InventoryPage() {
   const { isReadOnly } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   // Form states
   const [projectId, setProjectId] = useState('');
@@ -60,18 +62,18 @@ export function InventoryPage() {
     mutationFn: (id: string) => inventoryApi.deleteProduct(id),
     onSuccess: () => {
       toast('Barang berhasil dihapus permanen!', 'success');
+      setDeleteTarget(null);
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
     onError: (error: any) => {
       toast('Gagal menghapus barang: ' + (error.response?.data?.message || error.message), 'error');
+      setDeleteTarget(null);
     }
   });
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Apakah Anda yakin ingin menghapus barang ini beserta riwayat pemasangannya secara permanen?')) {
-      deleteProductMutation.mutate(id);
-    }
+    setDeleteTarget(id);
   };
 
   const inventoryData = inventoryResponse?.data || [];
@@ -296,6 +298,16 @@ export function InventoryPage() {
           </div>
         )}
       </SlideOver>
+
+      {/* AlertModal for Delete Confirmation */}
+      <AlertModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => { if (deleteTarget) deleteProductMutation.mutate(deleteTarget); }}
+        title="Hapus Barang Inventaris"
+        message="Apakah Anda yakin ingin menghapus barang ini beserta riwayat pemasangannya secara permanen?"
+        isLoading={deleteProductMutation.isPending}
+      />
     </div>
   );
 }
